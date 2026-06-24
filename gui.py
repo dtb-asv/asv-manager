@@ -1,19 +1,22 @@
 """
 =========================================================
 ASV Neufeld Manager
-GUI Version 2.0.2
+GUI Version 2.4 - Zwei-Spalten-Layout
 =========================================================
 """
 
 import customtkinter as ctk
-from modules.dashboard import Dashboard
-from modules.excel_reader import ExcelReader
 from customtkinter import CTkImage
 from tkinter import filedialog
 from PIL import Image
 
 from config import *
 from version import *
+
+from modules.dashboard import Dashboard
+from modules.excel_reader import ExcelReader
+from modules.poster_generator import PosterGenerator
+
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -28,48 +31,39 @@ class ASVManager(ctk.CTk):
         self.geometry(f"{APP_WIDTH}x{APP_HEIGHT}")
         self.resizable(False, False)
 
-        # ==========================
-        # Hauptlayout
-        # ==========================
+        self.reader = ExcelReader()
+        self.poster_generator = PosterGenerator()
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         self.create_sidebar()
         self.create_main()
-        self.reader = ExcelReader()
-
-    # -------------------------------------------------
 
     def create_sidebar(self):
-
-        sidebar = ctk.CTkFrame(self, width=220, corner_radius=0)
+        sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
         sidebar.grid(row=0, column=0, sticky="ns")
 
         logo = CTkImage(
             light_image=Image.open(LOGO),
             dark_image=Image.open(LOGO),
-            size=(120,120)
+            size=(110, 110)
         )
 
-        ctk.CTkLabel(
-            sidebar,
-            image=logo,
-            text=""
-        ).pack(pady=(30,10))
+        ctk.CTkLabel(sidebar, image=logo, text="").pack(pady=(25, 10))
 
         ctk.CTkLabel(
             sidebar,
             text="ASV Manager",
-            font=("Segoe UI",22,"bold")
+            font=("Segoe UI", 20, "bold")
         ).pack()
 
         ctk.CTkLabel(
             sidebar,
             text=f"Version {VERSION}"
-        ).pack(pady=(0,25))
+        ).pack(pady=(0, 25))
 
-        menues = [
+        menus = [
             "🏠 Dashboard",
             "🖼 Poster",
             "📅 Kalender",
@@ -78,170 +72,163 @@ class ASVManager(ctk.CTk):
             "ℹ Info"
         ]
 
-        for m in menues:
-
+        for menu in menus:
             ctk.CTkButton(
                 sidebar,
-                text=m,
-                width=180
+                text=menu,
+                width=165
             ).pack(pady=6)
 
-    # -------------------------------------------------
-
     def create_main(self):
-
         main = ctk.CTkFrame(self)
-        main.grid(row=0,column=1,sticky="nsew",padx=20,pady=20)
+        main.grid(row=0, column=1, sticky="nsew", padx=15, pady=15)
 
-        title = ctk.CTkLabel(
-            main,
-            text="Dashboard",
-            font=("Segoe UI",28,"bold")
-        )
+        main.grid_columnconfigure(0, weight=0)
+        main.grid_columnconfigure(1, weight=1)
+        main.grid_rowconfigure(0, weight=1)
 
-        title.pack(anchor="w", pady=(10,25))
-        self.dashboard = Dashboard(main)
+        control = ctk.CTkFrame(main, width=330)
+        control.grid(row=0, column=0, sticky="ns", padx=(0, 15), pady=0)
+        control.grid_propagate(False)
 
-        # ----------------------
-        # Excel
-        # ----------------------
+        dashboard_area = ctk.CTkFrame(main)
+        dashboard_area.grid(row=0, column=1, sticky="nsew", pady=0)
 
-        excel_frame = ctk.CTkFrame(main)
-
-        excel_frame.pack(fill="x", pady=10)
+        # -----------------------------
+        # Linke Steuerung
+        # -----------------------------
 
         ctk.CTkLabel(
-            excel_frame,
-            text="Saison"
-        ).pack(anchor="w", padx=15,pady=(10,0))
+            control,
+            text="Steuerung",
+            font=("Segoe UI", 24, "bold")
+        ).pack(anchor="w", padx=20, pady=(20, 15))
+
+        ctk.CTkLabel(
+            control,
+            text="Saison / Excel",
+            font=("Segoe UI", 14, "bold")
+        ).pack(anchor="w", padx=20, pady=(5, 5))
 
         self.excel_entry = ctk.CTkEntry(
-            excel_frame,
-            width=550
+            control,
+            width=285
         )
-
-        self.excel_entry.pack(side="left", padx=15,pady=15)
+        self.excel_entry.pack(padx=20, pady=(0, 8))
 
         ctk.CTkButton(
-            excel_frame,
-            text="Öffnen",
+            control,
+            text="📂 Excel auswählen",
             command=self.open_excel
-        ).pack(side="left")
-
-        # ----------------------
-        # Kalenderwoche
-        # ----------------------
-
-        kw_frame = ctk.CTkFrame(main)
-
-        kw_frame.pack(fill="x", pady=10)
+        ).pack(padx=20, pady=(0, 18), fill="x")
 
         ctk.CTkLabel(
-            kw_frame,
-            text="Kalenderwoche (leer = alle)"
-        ).pack(anchor="w", padx=15,pady=(10,0))
+            control,
+            text="Kalenderwoche",
+            font=("Segoe UI", 14, "bold")
+        ).pack(anchor="w", padx=20, pady=(0, 5))
 
         self.kw_entry = ctk.CTkEntry(
-            kw_frame,
-            width=80
+            control,
+            width=90,
+            placeholder_text="leer = alle"
         )
+        self.kw_entry.pack(anchor="w", padx=20, pady=(0, 18))
 
-        self.kw_entry.pack(anchor="w", padx=15,pady=15)
-
-        # ----------------------
-        # Aktionen
-        # ----------------------
-
-        action = ctk.CTkFrame(main)
-
-        action.pack(fill="x", pady=10)
+        ctk.CTkLabel(
+            control,
+            text="Aktionen",
+            font=("Segoe UI", 14, "bold")
+        ).pack(anchor="w", padx=20, pady=(0, 8))
 
         self.poster = ctk.BooleanVar(value=True)
         self.ics = ctk.BooleanVar(value=True)
         self.github = ctk.BooleanVar(value=True)
         self.zip = ctk.BooleanVar(value=False)
 
-        ctk.CTkCheckBox(action,text="Poster",variable=self.poster).pack(anchor="w",padx=15,pady=5)
-        ctk.CTkCheckBox(action,text="ICS",variable=self.ics).pack(anchor="w",padx=15,pady=5)
-        ctk.CTkCheckBox(action,text="GitHub",variable=self.github).pack(anchor="w",padx=15,pady=5)
-        ctk.CTkCheckBox(action,text="ZIP",variable=self.zip).pack(anchor="w",padx=15,pady=5)
+        ctk.CTkCheckBox(control, text="Poster erstellen", variable=self.poster).pack(anchor="w", padx=20, pady=5)
+        ctk.CTkCheckBox(control, text="ICS erstellen", variable=self.ics).pack(anchor="w", padx=20, pady=5)
+        ctk.CTkCheckBox(control, text="GitHub aktualisieren", variable=self.github).pack(anchor="w", padx=20, pady=5)
+        ctk.CTkCheckBox(control, text="ZIP erstellen", variable=self.zip).pack(anchor="w", padx=20, pady=5)
 
-        # ----------------------
-        # Progress
-        # ----------------------
-
-        self.progress = ctk.CTkProgressBar(main)
-
-        self.progress.pack(fill="x", pady=25)
-
+        self.progress = ctk.CTkProgressBar(control)
+        self.progress.pack(fill="x", padx=20, pady=(30, 10))
         self.progress.set(0)
 
-        self.status = ctk.CTkTextbox(main,height=120)
-
-        self.status.pack(fill="x")
-
-        self.status.insert("end","ASV Manager gestartet...\n")
-
         ctk.CTkButton(
-            main,
+            control,
             text="START",
             height=45,
-            font=("Segoe UI",18,"bold"),
+            font=("Segoe UI", 18, "bold"),
             command=self.start
-        ).pack(pady=25)
+        ).pack(padx=20, pady=(10, 15), fill="x")
 
-    # -------------------------------------------------
+        self.status = ctk.CTkTextbox(control, height=140)
+        self.status.pack(fill="x", padx=20, pady=(0, 20))
+        self.status.insert("end", "ASV Manager gestartet...\n")
+
+        # -----------------------------
+        # Rechtes Dashboard
+        # -----------------------------
+
+        ctk.CTkLabel(
+            dashboard_area,
+            text="Dashboard",
+            font=("Segoe UI", 28, "bold")
+        ).pack(anchor="w", padx=20, pady=(20, 10))
+
+        self.dashboard = Dashboard(dashboard_area)
 
     def open_excel(self):
-
         file = filedialog.askopenfilename(
-            filetypes=[("Excel","*.xlsx")]
+            filetypes=[("Excel", "*.xlsx")]
         )
 
         if file:
+            self.excel_entry.delete(0, "end")
+            self.excel_entry.insert(0, file)
 
-           self.excel_entry.delete(0, "end")
-           self.excel_entry.insert(0, file)
+            self.reader.load(file)
 
-           self.reader.load(file)
+            stats = self.reader.statistik()
+            spiel = self.reader.naechstes_spiel()
 
-           stats = self.reader.statistik()
+            self.dashboard.update_stats(stats)
+            self.dashboard.update_next_game(spiel)
 
-           spiel = self.reader.naechstes_spiel()
-
-           self.dashboard.update_next_game(spiel)
-
-           self.dashboard.update_stats(stats)
-
-           self.status.insert(
-            "end",
-           f"Excel geladen:\n{file}\n"
-        )
-
-    # -------------------------------------------------
+            self.status.insert(
+                "end",
+                f"Excel geladen:\n{file}\n"
+            )
 
     def start(self):
+        self.status.insert(
+            "end",
+            "\nStarte Verarbeitung...\n"
+        )
 
-        self.progress.set(0.2)
-        self.status.insert("end","\nStarte Verarbeitung...\n")
+        excel_datei = self.excel_entry.get()
+        kw = self.kw_entry.get()
 
         if self.poster.get():
-            self.status.insert("end","✔ Poster aktiviert\n")
+            self.status.insert(
+                "end",
+                "▶ Poster Generator gestartet\n"
+            )
 
-        if self.ics.get():
-            self.status.insert("end","✔ ICS aktiviert\n")
+            self.poster_generator.create(
+                excel_datei,
+                kw
+            )
 
-        if self.github.get():
-            self.status.insert("end","✔ GitHub aktiviert\n")
-
-        if self.zip.get():
-            self.status.insert("end","✔ ZIP aktiviert\n")
+            self.status.insert(
+                "end",
+                "✔ Poster Generator beendet\n"
+            )
 
         self.progress.set(1)
 
 
 def start_gui():
-
     app = ASVManager()
-
     app.mainloop()
