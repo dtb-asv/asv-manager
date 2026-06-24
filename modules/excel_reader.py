@@ -25,9 +25,7 @@ class ExcelReader:
             return 0
 
         return len(
-            self.df[
-                self.df["TYP"].astype(str).str.lower() == "heim"
-            ]
+            self.df[self.df["TYP"].astype(str).str.lower() == "heim"]
         )
 
     def auswaertsspiele(self):
@@ -35,9 +33,7 @@ class ExcelReader:
             return 0
 
         return len(
-            self.df[
-                self.df["TYP"].astype(str).str.lower() == "auswärts"
-            ]
+            self.df[self.df["TYP"].astype(str).str.lower() == "auswärts"]
         )
 
     def mannschaften(self):
@@ -46,12 +42,55 @@ class ExcelReader:
 
         return self.df["LIGA"].nunique()
 
+    def abgesagt(self):
+        if "STATUS" not in self.df.columns:
+            return 0
+
+        return len(
+            self.df[self.df["STATUS"].astype(str).str.lower() == "abgesagt"]
+        )
+
+    def freundschaftsspiele(self):
+        if "STATUS" not in self.df.columns:
+            return 0
+
+        return len(
+            self.df[self.df["STATUS"].astype(str).str.lower().isin(["fs", "freundschaft", "freundschaftsspiel"])]
+        )
+
+    def spiele_diese_woche(self):
+        if "DATUM" not in self.df.columns:
+            return 0
+
+        df = self.df.copy()
+
+        df["DATUM"] = pd.to_datetime(
+            df["DATUM"],
+            errors="coerce"
+        )
+
+        df = df.dropna(subset=["DATUM"])
+
+        heute = pd.Timestamp.now().normalize()
+        montag = heute - pd.Timedelta(days=heute.weekday())
+        sonntag = montag + pd.Timedelta(days=6)
+
+        df = df[
+            (df["DATUM"] >= montag) &
+            (df["DATUM"] <= sonntag)
+        ]
+
+        return len(df)
+
     def statistik(self):
         return {
             "Spiele": self.spiele(),
             "Heimspiele": self.heimspiele(),
             "Auswärtsspiele": self.auswaertsspiele(),
-            "Mannschaften": self.mannschaften()
+            "Mannschaften": self.mannschaften(),
+            "Diese Woche": self.spiele_diese_woche(),
+            "Freundschaftsspiele": self.freundschaftsspiele(),
+            "Abgesagt": self.abgesagt()
         }
 
     def naechstes_spiel(self):
@@ -62,11 +101,12 @@ class ExcelReader:
             return None
 
         df = self.df.copy()
+
         df["DATUM"] = pd.to_datetime(
             df["DATUM"],
             errors="coerce"
         )
-        
+
         df = df.dropna(subset=["DATUM"])
 
         heute = pd.Timestamp.now().normalize()
