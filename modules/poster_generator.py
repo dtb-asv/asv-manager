@@ -7,8 +7,6 @@ Erstellt Wochenposter aus der Excel-Datei.
 """
 
 import os
-from datetime import datetime, timedelta
-
 import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
 
@@ -27,17 +25,13 @@ class PosterGenerator:
         self.max_spiele = 7
 
     def create(self, excel_datei, kw=None):
-        """
-        Erstellt Poster.
-        kw leer = alle Wochen
-        kw Zahl = nur diese Kalenderwoche
-        """
 
         if not excel_datei:
             print("Keine Excel-Datei ausgewählt.")
             return False
 
         df = pd.read_excel(excel_datei, sheet_name="ICS2")
+
         df["DATUM"] = pd.to_datetime(df["DATUM"], errors="coerce")
         df = df.dropna(subset=["DATUM"])
 
@@ -53,8 +47,8 @@ class PosterGenerator:
             wochen = sorted(df["KW"].dropna().unique())
 
         font_title = ImageFont.truetype("arial.ttf", 60)
-        font_big = ImageFont.truetype("arial.ttf", 45)
-        font_small = ImageFont.truetype("arial.ttf", 28)
+        font_big = ImageFont.truetype("arial.ttf", 42)
+        font_small = ImageFont.truetype("arial.ttf", 26)
         font_kw = ImageFont.truetype("arial.ttf", 38)
 
         for aktuelle_kw in wochen:
@@ -63,11 +57,7 @@ class PosterGenerator:
             if df_woche.empty:
                 continue
 
-            folder = os.path.join(
-                self.output_folder,
-                str(jahr),
-                f"KW{aktuelle_kw}"
-            )
+            folder = os.path.join(self.output_folder, str(jahr), f"KW{aktuelle_kw}")
             os.makedirs(folder, exist_ok=True)
 
             count = 0
@@ -75,7 +65,6 @@ class PosterGenerator:
 
             img = self.neues_bild()
             draw = ImageDraw.Draw(img)
-
             self.header(draw, aktuelle_kw)
 
             y = self.y_start
@@ -92,32 +81,54 @@ class PosterGenerator:
 
                     img = self.neues_bild()
                     draw = ImageDraw.Draw(img)
-
                     self.header(draw, aktuelle_kw)
+
                     y = self.y_start
 
-                liga = str(row.get("LIGA", ""))
-                gegner = str(row.get("GEGNER", ""))
+                liga = str(row.get("LIGA", "")).strip()
+                art = str(row.get("ART", "Spiel")).strip().lower()
+                gegner = str(row.get("GEGNER", "")).strip()
                 datum = row["DATUM"].strftime("%d.%m.%Y")
-                zeit = str(row.get("STARTZEIT", ""))
-                ort = str(row.get("ORT", ""))
+                zeit = self.format_zeit(row.get("STARTZEIT", ""))
+                ort = str(row.get("ORT", "")).strip()
                 typ = str(row.get("TYP", "")).strip().lower()
 
-                if typ == "heim":
-                    label = "Heim"
-                    spiel = f"ASV Neufeld vs {gegner}"
+                if art == "camp":
+                    links = "CAMP"
+                    info = f"{datum} | {zeit} Uhr | {ort}"
+                    zeile2 = liga.upper()
+
+                elif art in ["freundschaft", "freundschaftsspiel", "fs"]:
+                    links = liga
+                    info = f"{datum} | {zeit} Uhr | Freundschaft"
+                    if typ == "heim":
+                        zeile2 = f"ASV NEUFELD VS {gegner}".upper()
+                    else:
+                        zeile2 = f"{gegner} VS ASV NEUFELD".upper()
+
                 else:
-                    label = "Auswärts"
-                    spiel = f"{gegner} vs ASV Neufeld"
+                    links = liga
 
-                draw.text((50, y), liga, font=font_big, fill="white")
+                    if typ == "heim":
+                        label = "Heim"
+                        zeile2 = f"ASV NEUFELD VS {gegner}".upper()
+                    else:
+                        label = "Auswärts"
+                        zeile2 = f"{gegner} VS ASV NEUFELD".upper()
 
-                text = f"{datum} | {zeit} Uhr | {label} {ort}"
-                draw.text((220, y + 10), text, font=font_small, fill=(220, 220, 220))
+                    info = f"{datum} | {zeit} Uhr | {label} {ort}"
 
-                draw.text((220, y + 55), spiel.upper(), font=font_small, fill="white")
+                # Linke Spalte
+                draw.text((50, y), links, font=font_big, fill="white")
 
-                draw.line((50, y + 110, 1000, y + 110), fill=(255, 255, 255, 60), width=1)
+                # Infozeile bewusst weiter rechts, damit lange LIGA/CAMP nicht überlappt
+                draw.text((300, y + 8), info, font=font_small, fill=(220, 220, 220))
+
+                # Zweite Zeile
+                draw.text((300, y + 50), zeile2, font=font_small, fill="white")
+
+                # Trennlinie
+                draw.line((50, y + 105, 1000, y + 105), fill=(255, 255, 255, 60), width=1)
 
                 y += self.block_height
                 count += 1
@@ -128,6 +139,20 @@ class PosterGenerator:
 
         print("Poster erfolgreich erstellt.")
         return True
+
+    def format_zeit(self, wert):
+        """Zeit aus Excel schön formatieren: 09:00 statt 09:00:00"""
+
+        if pd.isna(wert):
+            return ""
+
+        try:
+            return pd.to_datetime(str(wert)).strftime("%H:%M")
+        except Exception:
+            text = str(wert)
+            if len(text) >= 5:
+                return text[:5]
+            return text
 
     def neues_bild(self):
         img = Image.open(self.background_path).convert("RGBA")
