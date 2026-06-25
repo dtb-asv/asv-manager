@@ -4,6 +4,7 @@ ASV Neufeld Manager
 GUI Version 2.4 - Zwei-Spalten-Layout
 =========================================================
 """
+from modules.settings import Settings
 from modules.add_game_window import AddGameWindow
 import customtkinter as ctk
 from customtkinter import CTkImage
@@ -34,6 +35,7 @@ class ASVManager(ctk.CTk):
 
         self.reader = ExcelReader()
         self.poster_generator = PosterGenerator()
+        self.settings = Settings()
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -141,6 +143,11 @@ class ASVManager(ctk.CTk):
             font=("Segoe UI", 14, "bold")
         ).pack(anchor="w", padx=20, pady=(0, 5))
 
+        self.excel_entry.insert(
+            0,
+            self.settings.get("last_excel")
+        )
+
         self.kw_entry = ctk.CTkEntry(
             control,
             width=90,
@@ -153,6 +160,16 @@ class ASVManager(ctk.CTk):
             text="Aktionen",
             font=("Segoe UI", 14, "bold")
         ).pack(anchor="w", padx=20, pady=(0, 8))
+
+        self.kw_entry.insert(
+            0,
+            self.settings.get("last_kw")
+        )
+        
+        self.kw_entry.bind(
+            "<KeyRelease>",
+            lambda event: self.settings.set("last_kw", self.kw_entry.get())
+        )
 
         self.poster = ctk.BooleanVar(value=True)
         self.ics = ctk.BooleanVar(value=True)
@@ -200,6 +217,10 @@ class ASVManager(ctk.CTk):
         if file:
             self.excel_entry.delete(0, "end")
             self.excel_entry.insert(0, file)
+            self.settings.set(
+               "last_excel",
+                file
+            )
 
             self.reader.load(file)
 
@@ -215,7 +236,14 @@ class ASVManager(ctk.CTk):
             )
     def neues_spiel(self):
 
-        excel_datei = self.excel_entry.get()
+        excel_datei = self.excel_entry.get().strip()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Excel fehlt",
+                "Bitte zuerst eine Excel-Datei auswählen."
+            )
+            return
 
         AddGameWindow(
             self,
@@ -261,6 +289,10 @@ class ASVManager(ctk.CTk):
 
         excel_datei = self.excel_entry.get()
         kw = self.kw_entry.get()
+        self.settings.set(
+            "last_kw",
+            kw
+        )
 
         if self.poster.get():
             self.status.insert(
