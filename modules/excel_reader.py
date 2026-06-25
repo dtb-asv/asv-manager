@@ -3,9 +3,12 @@
 ASV Manager
 Excel Reader
 =========================================================
+Liest Excel-Daten und liefert Statistiken.
 """
 
 import pandas as pd
+
+from modules.date_utils import parse_date
 
 
 class ExcelReader:
@@ -54,8 +57,12 @@ class ExcelReader:
         if "STATUS" not in self.df.columns:
             return 0
 
+        status = self.df["STATUS"].astype(str).str.lower()
+
         return len(
-            self.df[self.df["STATUS"].astype(str).str.lower().isin(["fs", "freundschaft", "freundschaftsspiel"])]
+            self.df[
+                status.isin(["fs", "freundschaft", "freundschaftsspiel"])
+            ]
         )
 
     def spiele_diese_woche(self):
@@ -63,21 +70,16 @@ class ExcelReader:
             return 0
 
         df = self.df.copy()
-
-        df["DATUM"] = pd.to_datetime(
-            df["DATUM"],
-            errors="coerce"
-        )
-
-        df = df.dropna(subset=["DATUM"])
+        df["DATUM_SORT"] = df["DATUM"].apply(parse_date)
+        df = df.dropna(subset=["DATUM_SORT"])
 
         heute = pd.Timestamp.now().normalize()
         montag = heute - pd.Timedelta(days=heute.weekday())
         sonntag = montag + pd.Timedelta(days=6)
 
         df = df[
-            (df["DATUM"] >= montag) &
-            (df["DATUM"] <= sonntag)
+            (df["DATUM_SORT"] >= montag) &
+            (df["DATUM_SORT"] <= sonntag)
         ]
 
         return len(df)
@@ -101,25 +103,20 @@ class ExcelReader:
             return None
 
         df = self.df.copy()
-
-        df["DATUM"] = pd.to_datetime(
-            df["DATUM"],
-            errors="coerce"
-        )
-
-        df = df.dropna(subset=["DATUM"])
+        df["DATUM_SORT"] = df["DATUM"].apply(parse_date)
+        df = df.dropna(subset=["DATUM_SORT"])
 
         heute = pd.Timestamp.now().normalize()
-        df = df[df["DATUM"] >= heute]
+        df = df[df["DATUM_SORT"] >= heute]
 
         if len(df) == 0:
             return None
 
-        spiel = df.sort_values("DATUM").iloc[0]
+        spiel = df.sort_values("DATUM_SORT").iloc[0]
 
         return {
             "liga": str(spiel.get("LIGA", "")),
-            "datum": spiel["DATUM"].strftime("%d.%m.%Y"),
+            "datum": spiel["DATUM_SORT"].strftime("%d.%m.%Y"),
             "gegner": str(spiel.get("GEGNER", "")),
             "typ": str(spiel.get("TYP", "")),
             "ort": str(spiel.get("ORT", ""))

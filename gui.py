@@ -4,10 +4,11 @@ ASV Neufeld Manager
 GUI Version 2.4 - Zwei-Spalten-Layout
 =========================================================
 """
-
+from modules.add_game_window import AddGameWindow
 import customtkinter as ctk
 from customtkinter import CTkImage
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+from modules.games_window import GamesWindow
 from PIL import Image
 
 from config import *
@@ -65,18 +66,30 @@ class ASVManager(ctk.CTk):
 
         menus = [
             "🏠 Dashboard",
+            "📅 Spiele",
+            "➕ Neues Spiel",
             "🖼 Poster",
             "📅 Kalender",
             "☁ GitHub",
             "⚙ Einstellungen",
             "ℹ Info"
-        ]
+            ]
 
         for menu in menus:
+
+            command = None
+
+            if menu == "➕ Neues Spiel":
+                command = self.neues_spiel
+
+            if menu == "📅 Spiele":
+                command = self.zeige_spiele
+
             ctk.CTkButton(
                 sidebar,
                 text=menu,
-                width=165
+                width=165,
+                command=command
             ).pack(pady=6)
 
     def create_main(self):
@@ -200,6 +213,45 @@ class ASVManager(ctk.CTk):
                 "end",
                 f"Excel geladen:\n{file}\n"
             )
+    def neues_spiel(self):
+
+        excel_datei = self.excel_entry.get()
+
+        AddGameWindow(
+            self,
+            excel_datei,
+            on_saved=self.reload_excel
+        )
+    def reload_excel(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if excel_datei:
+            self.reader.load(excel_datei)
+
+            stats = self.reader.statistik()
+            spiel = self.reader.naechstes_spiel()
+
+            self.dashboard.update_stats(stats)
+            self.dashboard.update_next_game(spiel)
+
+            self.status.insert(
+                "end",
+                "Excel wurde nach neuem Spiel aktualisiert.\n"
+            ) 
+
+    def zeige_spiele(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showerror(
+                "Fehler",
+                "Bitte zuerst eine Excel-Datei auswählen."
+            )
+            return
+
+        GamesWindow(self, excel_datei)                  
 
     def start(self):
         self.status.insert(
