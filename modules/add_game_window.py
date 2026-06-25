@@ -5,20 +5,29 @@ from modules.excel_writer import ExcelWriter
 
 class AddGameWindow(ctk.CTkToplevel):
 
-    def __init__(self, parent, excel_datei, on_saved=None):
+    def __init__(self, parent, excel_datei, on_saved=None, edit_data=None):
         super().__init__(parent)
 
         self.excel_datei = excel_datei
         self.on_saved = on_saved
+        self.edit_data = edit_data
         self.writer = ExcelWriter()
 
-        self.title("Neues Spiel")
-        self.geometry("500x720")
+        self.is_edit = edit_data is not None
+
+        if self.is_edit:
+            self.title("Spiel bearbeiten")
+        else:
+            self.title("Neues Spiel")
+
+        self.geometry("500x760")
         self.grab_set()
+
+        titel = "Spiel bearbeiten" if self.is_edit else "Neues Spiel anlegen"
 
         ctk.CTkLabel(
             self,
-            text="Neues Spiel anlegen",
+            text=titel,
             font=("Segoe UI", 24, "bold")
         ).pack(pady=20)
 
@@ -55,15 +64,41 @@ class AddGameWindow(ctk.CTkToplevel):
         )
         self.art.pack(fill="x", padx=20, pady=5)
 
+        if self.is_edit:
+            self.fill_fields()
+
         ctk.CTkButton(
             self,
             text="Speichern",
             command=self.speichern
-        ).pack(pady=25)
+        ).pack(pady=(20, 8))
 
-    def speichern(self):
+        ctk.CTkButton(
+            self,
+            text="Speichern & schließen",
+            command=lambda: self.speichern(close_after=True)
+        ).pack(pady=(0, 20))
+
+    def fill_fields(self):
+        self.liga.insert(0, str(self.edit_data.get("LIGA", "")))
+        self.datum.insert(0, str(self.edit_data.get("DATUM", ""))[:10])
+        self.startzeit.insert(0, str(self.edit_data.get("STARTZEIT", ""))[:5])
+        self.endzeit.insert(0, str(self.edit_data.get("ENDZEIT", ""))[:5])
+        self.gegner.insert(0, str(self.edit_data.get("GEGNER", "")))
+        self.ort.insert(0, str(self.edit_data.get("ORT", "")))
+        self.beschreibung.insert(0, str(self.edit_data.get("BESCHREIBUNG", "")))
+
+        self.typ.set(str(self.edit_data.get("TYP", "Heim")))
+        self.status.set(str(self.edit_data.get("STATUS", "Aktiv")))
+        self.art.set(str(self.edit_data.get("ART", "Spiel")))
+
+    def speichern(self, close_after=False):
+
         if not self.excel_datei:
-            messagebox.showerror("Fehler", "Bitte zuerst eine Excel-Datei auswählen.")
+            messagebox.showerror(
+                "Fehler",
+                "Bitte zuerst eine Excel-Datei auswählen."
+            )
             return
 
         daten = {
@@ -80,23 +115,46 @@ class AddGameWindow(ctk.CTkToplevel):
         }
 
         try:
-            backup = self.writer.add_game(self.excel_datei, daten)
 
-            messagebox.showinfo(
-                "Gespeichert",
-                f"Spiel wurde ins Excel geschrieben.\n\nBackup erstellt:\n{backup}"
-            )
+            if self.is_edit:
+
+                self.writer.update_game(
+                    self.excel_datei,
+                    int(self.edit_data["_EXCEL_ROW"]),
+                    daten
+                )
+
+            else:
+
+                self.writer.add_game(
+                    self.excel_datei,
+                    daten
+                )
 
             if self.on_saved:
                 self.on_saved()
 
-            self.destroy()
+            if close_after:
+
+                self.destroy()
+
+            else:
+
+                messagebox.showinfo(
+                    "Gespeichert",
+                    "Änderungen wurden gespeichert."
+                )
 
         except PermissionError:
+
             messagebox.showerror(
-                "Fehler",
-                "Excel-Datei ist vermutlich geöffnet.\nBitte Excel schließen und erneut versuchen."
+                "Excel geöffnet",
+                "Bitte Excel schließen."
             )
 
         except Exception as e:
-            messagebox.showerror("Fehler", str(e))
+
+            messagebox.showerror(
+                "Fehler",
+                str(e)
+            )

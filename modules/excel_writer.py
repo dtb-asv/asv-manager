@@ -1,5 +1,7 @@
+import openpyxl
 import shutil
 from datetime import datetime
+from pathlib import Path
 from openpyxl import load_workbook
 
 
@@ -37,6 +39,27 @@ class ExcelWriter:
 
         wb.save(excel_datei)
         return backup
+
+    def update_game(self, row_number, game_data):
+        """
+        Aktualisiert ein bestehendes Spiel in der Excel-Datei.
+        row_number = echte Excel-Zeilennummer
+        game_data = Dictionary mit den neuen Werten
+        """
+
+        wb = openpyxl.load_workbook(self.file_path)
+        ws = wb["ICS2"]
+
+        ws.cell(row=row_number, column=1).value = game_data.get("team", "")
+        ws.cell(row=row_number, column=2).value = game_data.get("gegner", "")
+        ws.cell(row=row_number, column=3).value = game_data.get("datum", "")
+        ws.cell(row=row_number, column=4).value = game_data.get("uhrzeit", "")
+        ws.cell(row=row_number, column=5).value = game_data.get("ort", "")
+        ws.cell(row=row_number, column=6).value = game_data.get("bewerb", "")
+        ws.cell(row=row_number, column=7).value = game_data.get("heim_auswaerts", "")
+
+        wb.save(self.file_path)
+        wb.close()
 
     def update_game(self, excel_datei, excel_zeile, daten):
         backup = self._backup(excel_datei)
