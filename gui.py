@@ -193,6 +193,17 @@ class ASVManager(ctk.CTk):
             command=self.start
         ).pack(padx=20, pady=(10, 15), fill="x")
 
+        ctk.CTkButton(
+            control,
+            text="🚪 Beenden",
+            height=38,
+            command=self.destroy
+        ).pack(
+            fill="x",
+            padx=20,
+            pady=(0, 15)
+        )
+
         self.status = ctk.CTkTextbox(control, height=140)
         self.status.pack(fill="x", padx=20, pady=(0, 20))
         self.status.insert("end", "ASV Manager gestartet...\n")

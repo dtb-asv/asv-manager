@@ -1,0 +1,26 @@
+"""
+=========================================================
+ASV Manager
+Konstanten
+=========================================================
+"""
+
+# Tabellen
+
+SHEET_GAMES = "ICS2"
+SHEET_HISTORY = "HISTORY"
+
+
+# Spiel-Spalten
+
+COL_GAME_ID = "GAME_ID"
+COL_STATUS = "STATUS"
+COL_LIGA = "LIGA"
+COL_DATUM = "DATUM"
+COL_STARTZEIT = "STARTZEIT"
+COL_ENDZEIT = "ENDZEIT"
+COL_GEGNER = "GEGNER"
+COL_ORT = "ORT"
+COL_TYP = "TYP"
+COL_ART = "ART"
+COL_BESCHREIBUNG = "BESCHREIBUNG"

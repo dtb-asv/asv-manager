@@ -20,6 +20,7 @@ class HistoryService:
         aktion,
         objekt,
         excel_zeile,
+        game_id="",
         grund="",
         bemerkung="",
         benutzer="System"
@@ -28,11 +29,11 @@ class HistoryService:
         wb = load_workbook(excel_datei)
 
         if self.SHEET_NAME not in wb.sheetnames:
-
             ws = wb.create_sheet(self.SHEET_NAME)
 
             ws.append([
                 "Zeitpunkt",
+                "GAME_ID",
                 "Bereich",
                 "Aktion",
                 "Objekt",
@@ -43,11 +44,17 @@ class HistoryService:
             ])
 
         else:
-
             ws = wb[self.SHEET_NAME]
+
+            headers = [cell.value for cell in ws[1]]
+
+            if "GAME_ID" not in headers:
+                ws.insert_cols(2)
+                ws["B1"] = "GAME_ID"
 
         ws.append([
             datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
+            game_id,
             bereich,
             aktion,
             objekt,

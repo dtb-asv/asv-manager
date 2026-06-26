@@ -3,7 +3,6 @@
 ASV Manager
 Date Utilities
 =========================================================
-Alle Datums- und Zeitfunktionen befinden sich hier.
 """
 
 import pandas as pd
@@ -11,23 +10,44 @@ import pandas as pd
 
 def parse_date(value):
     """
-    Wandelt ein Datum aus Excel in ein Python-Datum um.
-    Erwartetes Format:
-    TT.MM.JJJJ
+    Akzeptiert:
+    - 07.08.2026
+    - 2026-08-07
+    - echte Excel/Python-Datumswerte
     """
 
-    return pd.to_datetime(
+    if pd.isna(value):
+        return pd.NaT
+
+    # zuerst österreichisches Format
+    datum = pd.to_datetime(
         value,
         format="%d.%m.%Y",
         errors="coerce"
     )
 
+    if not pd.isna(datum):
+        return datum
+
+    # danach ISO/Python-Format
+    datum = pd.to_datetime(
+        value,
+        format="%Y-%m-%d",
+        errors="coerce"
+    )
+
+    if not pd.isna(datum):
+        return datum
+
+    # letzte Rettung
+    return pd.to_datetime(
+        value,
+        dayfirst=True,
+        errors="coerce"
+    )
+
 
 def format_date(value):
-    """
-    Gibt ein Datum im Format TT.MM.JJJJ zurück.
-    """
-
     datum = parse_date(value)
 
     if pd.isna(datum):
@@ -37,10 +57,6 @@ def format_date(value):
 
 
 def format_time(value):
-    """
-    Uhrzeit schön darstellen.
-    """
-
     if pd.isna(value):
         return ""
 
@@ -53,10 +69,6 @@ def format_time(value):
 
 
 def get_kw(value):
-    """
-    Kalenderwoche berechnen.
-    """
-
     datum = parse_date(value)
 
     if pd.isna(datum):

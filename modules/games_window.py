@@ -1,5 +1,6 @@
 import customtkinter as ctk
 
+from modules.constants import COL_STATUS
 from modules.game_service import GameService
 from modules.date_utils import parse_date, format_date, format_time
 from modules.archive_game_window import ArchiveGameWindow
@@ -16,6 +17,11 @@ class GamesWindow(ctk.CTkToplevel):
         self.df_original = None
         self.selected_row = None
         self.selected_frame = None
+        self.view_state = {
+            "search": "",
+            "liga": "Alle",
+            "game_id": None
+        }   
 
         self.title("Spiele Übersicht")
         self.geometry("1200x720")
@@ -69,6 +75,13 @@ class GamesWindow(ctk.CTkToplevel):
         )
         self.selection_label.pack(side="left", padx=10, pady=10)
 
+        ctk.CTkButton(
+            bottom,
+            text="❌ Schließen",
+            command=self.destroy,
+            width=120
+        ).pack(side="left", padx=10)
+
         self.edit_button = ctk.CTkButton(
             bottom,
             text="✏️ Bearbeiten",
@@ -106,6 +119,10 @@ class GamesWindow(ctk.CTkToplevel):
             df["LIGA"].notna() |
             df["GEGNER"].notna()
         ]
+        if COL_STATUS in df.columns:
+            df = df[
+            df[COL_STATUS].astype(str).str.lower() != "archiviert"
+        ]
 
         df["_EXCEL_ROW"] = df.index + 2
         df["_DATUM_SORT"] = df["DATUM"].apply(parse_date)
@@ -117,8 +134,7 @@ class GamesWindow(ctk.CTkToplevel):
         ligen = sorted(df["LIGA"].dropna().astype(str).unique().tolist())
 
         self.liga_filter.configure(values=["Alle"] + ligen)
-        self.liga_filter.set("Alle")
-
+        self.restore_view_state()
         self.apply_filter()
 
     def apply_filter(self):
@@ -226,12 +242,39 @@ class GamesWindow(ctk.CTkToplevel):
         self.archive_button.configure(state="normal")
         self.selection_label.configure(text=text)
 
+    def save_view_state(self):
+
+        self.view_state["search"] = self.search_entry.get()
+        self.view_state["liga"] = self.liga_filter.get()
+
+        if self.selected_row is not None:
+            self.view_state["game_id"] = self.selected_row.get("GAME_ID")
+        else:
+            self.view_state["game_id"] = None    
+
+    def restore_view_state(self):
+
+        self.search_entry.delete(0, "end")
+        self.search_entry.insert(
+            0,
+            self.view_state.get("search", "")
+        )
+
+        liga = self.view_state.get("liga", "Alle")
+
+        try:
+            self.liga_filter.set(liga)
+        except Exception:
+            self.liga_filter.set("Alle")        
+
     def bearbeiten_placeholder(self):
         if self.selected_row is None:
             self.selection_label.configure(
                 text="Bitte zuerst ein Spiel auswählen."
             )
             return
+
+        self.save_view_state()    
 
         AddGameWindow(
             self,
