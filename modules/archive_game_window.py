@@ -97,7 +97,10 @@ class ArchiveGameWindow(ctk.CTkToplevel):
 
         self.result = {
             "grund": self.grund.get(),
-            "bemerkung": self.bemerkung.get("1.0", "end").strip()
+            "bemerkung": self.bemerkung.get(
+                "1.0",
+                "end"
+            ).strip()
         }
 
         self.destroy()

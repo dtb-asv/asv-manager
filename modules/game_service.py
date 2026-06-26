@@ -52,3 +52,20 @@ class GameService:
             excel_datei,
             daten
         )
+
+        # -------------------------------------------------
+
+    def archive_game(
+        self,
+        excel_datei,
+        excel_zeile,
+        grund,
+        bemerkung
+    ):
+
+        print(
+            f"ARCHIVIEREN -> "
+            f"Zeile={excel_zeile}, "
+            f"Grund={grund}, "
+            f"Bemerkung={bemerkung}"
+        )    

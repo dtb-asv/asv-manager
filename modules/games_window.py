@@ -1,8 +1,9 @@
 import customtkinter as ctk
-import pandas as pd
 
 from modules.game_service import GameService
 from modules.date_utils import parse_date, format_date, format_time
+from modules.archive_game_window import ArchiveGameWindow
+from modules.add_game_window import AddGameWindow
 
 
 class GamesWindow(ctk.CTkToplevel):
@@ -80,6 +81,18 @@ class GamesWindow(ctk.CTkToplevel):
             padx=10
         )
 
+        self.archive_button = ctk.CTkButton(
+            bottom,
+            text="🗄 Archivieren",
+            command=self.archivieren_placeholder,
+            state="disabled"
+        )
+
+        self.archive_button.pack(
+            side="right",
+            padx=10
+        )
+
         self.load_games()
 
     def load_games(self):
@@ -136,6 +149,7 @@ class GamesWindow(ctk.CTkToplevel):
         self.selected_frame = None
         self.selection_label.configure(text="Kein Spiel ausgewählt")
         self.edit_button.configure(state="disabled")
+        self.archive_button.configure(state="disabled")
 
         columns = ["LIGA", "DATUM", "STARTZEIT", "TYP", "ART", "GEGNER", "ORT", "STATUS"]
 
@@ -209,6 +223,7 @@ class GamesWindow(ctk.CTkToplevel):
             f"{row.get('GEGNER', '')}"
         )
         self.edit_button.configure(state="normal")
+        self.archive_button.configure(state="normal")
         self.selection_label.configure(text=text)
 
     def bearbeiten_placeholder(self):
@@ -218,11 +233,31 @@ class GamesWindow(ctk.CTkToplevel):
             )
             return
 
-        from modules.add_game_window import AddGameWindow
-
         AddGameWindow(
             self,
             self.excel_datei,
             on_saved=self.load_games,
             edit_data=self.selected_row
+        )
+
+    def archivieren_placeholder(self):
+
+        if self.selected_row is None:
+            return
+
+        dialog = ArchiveGameWindow(
+            self,
+            self.selected_row
+        )
+
+        self.wait_window(dialog)
+
+        if dialog.result is None:
+            return
+
+        self.service.archive_game(
+            self.excel_datei,
+            int(self.selected_row["_EXCEL_ROW"]),
+            dialog.result["grund"],
+            dialog.result["bemerkung"]
         )
