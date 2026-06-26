@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import pandas as pd
 
+from modules.game_service import GameService
 from modules.date_utils import parse_date, format_date, format_time
 
 
@@ -10,6 +11,7 @@ class GamesWindow(ctk.CTkToplevel):
         super().__init__(parent)
 
         self.excel_datei = excel_datei
+        self.service = GameService()
         self.df_original = None
         self.selected_row = None
         self.selected_frame = None
@@ -81,7 +83,9 @@ class GamesWindow(ctk.CTkToplevel):
         self.load_games()
 
     def load_games(self):
-        df = pd.read_excel(self.excel_datei, sheet_name="ICS2")
+        df = self.service.load_games(
+            self.excel_datei
+        )
 
         df = df.dropna(how="all")
 

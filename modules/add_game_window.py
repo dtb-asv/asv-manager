@@ -67,17 +67,26 @@ class AddGameWindow(ctk.CTkToplevel):
         if self.is_edit:
             self.fill_fields()
 
-        ctk.CTkButton(
-            self,
-            text="Speichern",
-            command=self.speichern
-        ).pack(pady=(20, 8))
+        button_frame = ctk.CTkFrame(self)
+        button_frame.pack(pady=20)
 
         ctk.CTkButton(
-            self,
+            button_frame,
+            text="Abbrechen",
+            command=self.destroy
+        ).pack(side="left", padx=8)
+
+        ctk.CTkButton(
+            button_frame,
+            text="Speichern",
+            command=self.speichern
+        ).pack(side="left", padx=8)
+
+        ctk.CTkButton(
+            button_frame,
             text="Speichern & schließen",
             command=lambda: self.speichern(close_after=True)
-        ).pack(pady=(0, 20))
+        ).pack(side="left", padx=8)
 
     def fill_fields(self):
         self.liga.insert(0, str(self.edit_data.get("LIGA", "")))
