@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from modules.excel_writer import ExcelWriter
+from modules.game_service import GameService
 
 
 class AddGameWindow(ctk.CTkToplevel):
@@ -12,6 +13,7 @@ class AddGameWindow(ctk.CTkToplevel):
         self.on_saved = on_saved
         self.edit_data = edit_data
         self.writer = ExcelWriter()
+        self.service = GameService()
 
         self.is_edit = edit_data is not None
 
@@ -127,11 +129,11 @@ class AddGameWindow(ctk.CTkToplevel):
 
             if self.is_edit:
 
-                self.writer.update_game(
-                    self.excel_datei,
-                    int(self.edit_data["_EXCEL_ROW"]),
-                    daten
-                )
+                self.service.update_game(
+                self.excel_datei,
+                int(self.edit_data["_EXCEL_ROW"]),
+                daten
+            )
 
             else:
 
