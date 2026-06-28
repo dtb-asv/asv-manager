@@ -4,6 +4,7 @@ ASV Neufeld Manager
 GUI Version 2.4 - Zwei-Spalten-Layout
 =========================================================
 """
+from modules.members_window import MembersWindow
 from modules.settings import Settings
 from modules.add_game_window import AddGameWindow
 import customtkinter as ctk
@@ -74,7 +75,8 @@ class ASVManager(ctk.CTk):
             "📅 Kalender",
             "☁ GitHub",
             "⚙ Einstellungen",
-            "ℹ Info"
+            "ℹ Info",
+            "👥 Mitglieder"
             ]
 
         for menu in menus:
@@ -86,6 +88,9 @@ class ASVManager(ctk.CTk):
 
             if menu == "📅 Spiele":
                 command = self.zeige_spiele
+
+            if menu == "👥 Mitglieder":
+                command = self.zeige_mitglieder    
 
             ctk.CTkButton(
                 sidebar,
@@ -324,6 +329,19 @@ class ASVManager(ctk.CTk):
         self.progress.set(1)
 
 
+    def zeige_mitglieder(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen."
+            )
+            return
+
+        MembersWindow(self, excel_datei)
+
 def start_gui():
     app = ASVManager()
-    app.mainloop()
+    app.mainloop()   
