@@ -68,6 +68,9 @@ class MembersWindow(ctk.CTkToplevel):
         for widget in self.scroll.winfo_children():
             widget.destroy()
 
+        self.selected_member = None
+        self.selected_frame = None    
+
         df = self.service.load_members(self.excel_datei)
         df = df.dropna(how="all")
 

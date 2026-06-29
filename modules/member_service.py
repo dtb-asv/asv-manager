@@ -1,15 +1,17 @@
-from datetime import datetime
-from openpyxl import load_workbook
 import pandas as pd
 
+from datetime import datetime
+from openpyxl import load_workbook
 from modules.constants import SHEET_MEMBERS
 from modules.member_writer import MemberWriter
+from modules.history_service import HistoryService
 
 
 class MemberService:
 
     def __init__(self):
         self.writer = MemberWriter()
+        self.history = HistoryService()
 
     def load_members(self, excel_datei):
         wb = load_workbook(excel_datei)
@@ -57,14 +59,45 @@ class MemberService:
         self.writer.add_member(excel_datei, daten)
 
     def update_member(self, excel_datei, member_id, daten):
+
         self.writer.update_member(
             excel_datei,
             member_id,
             daten
         )
 
+        objekt = (
+            f"{daten.get('VORNAME', '')} "
+            f"{daten.get('NACHNAME', '')}"
+        )
+
+        self.history.log(
+            excel_datei=excel_datei,
+            bereich="Mitglied",
+            aktion="Bearbeitet",
+            objekt=objekt,
+            excel_zeile="",
+            game_id=member_id,
+            grund="",
+            bemerkung="Mitglied wurde bearbeitet",
+            benutzer="System"
+        )
+
     def archive_member(self, excel_datei, member_id):
+
         self.writer.archive_member(
             excel_datei,
             member_id
+        )
+
+        self.history.log(
+            excel_datei=excel_datei,
+            bereich="Mitglied",
+            aktion="Archiviert",
+            objekt=member_id,
+            excel_zeile="",
+            game_id=member_id,
+            grund="",
+            bemerkung="Mitglied wurde archiviert",
+            benutzer="System"
         )
