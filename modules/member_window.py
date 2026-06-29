@@ -7,7 +7,12 @@ from modules.member_service import MemberService
 
 class MemberWindow(ctk.CTkToplevel):
 
-    def __init__(self, parent):
+    def __init__(
+        self,
+        parent,
+        on_saved=None,
+        member_data=None
+    ):
         
         super().__init__(parent)
 
@@ -16,6 +21,8 @@ class MemberWindow(ctk.CTkToplevel):
         self.grab_set()
         self.excel_datei = parent.excel_datei
         self.service = MemberService()
+        self.on_saved = on_saved
+        self.member_data = member_data
 
         ctk.CTkLabel(
             self,
@@ -56,6 +63,9 @@ class MemberWindow(ctk.CTkToplevel):
             command=self.speichern
         ).pack(side="left", padx=10)
 
+        if self.member_data:
+            self.fill_data()
+
     def speichern(self):
 
         if not self.vorname.get().strip():
@@ -78,12 +88,38 @@ class MemberWindow(ctk.CTkToplevel):
             "GEBURTSDATUM": self.geburtsdatum.get()
         }
 
-        self.service.add_member(
-            self.excel_datei,
-            daten
-        )
+        if self.member_data:
+            self.service.update_member(
+                self.excel_datei,
+                self.member_data["MEMBER_ID"],
+                daten
+            )
+        else:
+            self.service.add_member(
+                self.excel_datei,
+                daten
+            )
+
+        if self.on_saved:
+            self.on_saved()
 
         self.destroy()
+
+    def fill_data(self):
+
+        self.vorname.insert(
+            0,
+            self.member_data["VORNAME"]
+        )
+
+        self.nachname.insert(
+            0,
+            self.member_data["NACHNAME"]
+        )
+
+        self.geburtsdatum.set(
+            self.member_data["GEBURTSDATUM"]
+        )    
 
 
    

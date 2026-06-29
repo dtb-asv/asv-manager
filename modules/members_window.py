@@ -2,6 +2,7 @@ import customtkinter as ctk
 
 from modules.member_service import MemberService
 from modules.member_window import MemberWindow
+from tkinter import messagebox
 
 
 class MembersWindow(ctk.CTkToplevel):
@@ -11,6 +12,8 @@ class MembersWindow(ctk.CTkToplevel):
 
         self.excel_datei = excel_datei
         self.service = MemberService()
+        self.selected_member = None
+        self.selected_frame = None
 
         self.title("Mitglieder")
         self.geometry("1000x650")
@@ -22,11 +25,32 @@ class MembersWindow(ctk.CTkToplevel):
             font=("Segoe UI", 26, "bold")
         ).pack(pady=15)
 
-        ctk.CTkButton(
+        toolbar = ctk.CTkFrame(
             self,
-            text="➕ Neues Mitglied",
-            command=self.neues_mitglied
-        ).pack(pady=5)
+            fg_color="transparent"
+        )
+        toolbar.pack(pady=5)
+
+        ctk.CTkButton(
+            toolbar,
+            text="➕ Neu",
+            command=self.neues_mitglied,
+            width=140
+        ).pack(side="left", padx=5)
+
+        ctk.CTkButton(
+            toolbar,
+            text="✏ Bearbeiten",
+            command=self.bearbeiten_mitglied,
+            width=140
+        ).pack(side="left", padx=5)
+
+        ctk.CTkButton(
+            toolbar,
+            text="📦 Archivieren",
+            command=self.archivieren_placeholder,
+            width=140
+        ).pack(side="left", padx=5)
 
         self.scroll = ctk.CTkScrollableFrame(self)
         self.scroll.pack(fill="both", expand=True, padx=20, pady=10)
@@ -41,8 +65,16 @@ class MembersWindow(ctk.CTkToplevel):
 
     def load_members(self):
 
+        for widget in self.scroll.winfo_children():
+            widget.destroy()
+
         df = self.service.load_members(self.excel_datei)
         df = df.dropna(how="all")
+
+        if "STATUS" in df.columns:
+            df = df[
+                df["STATUS"].astype(str).str.lower() != "archiviert"
+            ]
 
         columns = [
             "MEMBER_ID",
@@ -65,17 +97,92 @@ class MembersWindow(ctk.CTkToplevel):
 
         for _, row in df.iterrows():
 
-            row_frame = ctk.CTkFrame(self.scroll)
+            row_data = row.to_dict()
+
+            row_frame = ctk.CTkFrame(
+                self.scroll,
+                fg_color="transparent"
+            )
             row_frame.pack(fill="x", pady=2)
 
+            row_frame.bind(
+                "<Button-1>",
+                lambda event, r=row_data, f=row_frame: self.select_member(r, f)
+            )
+
             for col in columns:
-                ctk.CTkLabel(
+
+                label = ctk.CTkLabel(
                     row_frame,
                     text=str(row.get(col, "")),
                     width=150,
                     font=("Segoe UI", 12)
-                ).pack(side="left", padx=3)
+                )
 
+                label.pack(side="left", padx=3)
+
+                label.bind(
+                    "<Button-1>",
+                    lambda event, r=row_data, f=row_frame: self.select_member(r, f)
+                )
+                
     def neues_mitglied(self):
 
-        MemberWindow(self)                
+        MemberWindow(
+            self,
+            on_saved=self.load_members
+        ) 
+
+    def select_member(self, row, frame):
+
+        if self.selected_frame:
+            self.selected_frame.configure(
+                fg_color="transparent"
+            )
+
+        frame.configure(
+            fg_color=("lightblue", "#1F538D")
+        )
+
+        self.selected_frame = frame
+        self.selected_member = row
+
+        print(self.selected_member)     
+
+    def bearbeiten_mitglied(self):
+
+        if self.selected_member is None:
+            print("Bitte zuerst ein Mitglied auswählen.")
+            return
+
+        MemberWindow(
+            self,
+            on_saved=self.load_members,
+            member_data=self.selected_member
+        )
+
+
+    def archivieren_placeholder(self):
+
+        if self.selected_member is None:
+            messagebox.showwarning(
+                "Kein Mitglied",
+                "Bitte zuerst ein Mitglied auswählen."
+            )
+            return
+
+        antwort = messagebox.askyesno(
+            "Mitglied archivieren",
+            f"Soll {self.selected_member['VORNAME']} "
+            f"{self.selected_member['NACHNAME']} archiviert werden?"
+        )
+
+        if not antwort:
+            return
+
+        self.service.archive_member(
+            self.excel_datei,
+            self.selected_member["MEMBER_ID"]
+        )
+
+        self.load_members()              

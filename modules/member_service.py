@@ -47,7 +47,6 @@ class MemberService:
                 nummern.append(int(text.replace("MEMBER", "")))
 
         next_number = max(nummern, default=0) + 1
-
         return f"MEMBER{next_number:06d}"
 
     def add_member(self, excel_datei, daten):
@@ -56,3 +55,16 @@ class MemberService:
         daten["STATUS"] = "Aktiv"
 
         self.writer.add_member(excel_datei, daten)
+
+    def update_member(self, excel_datei, member_id, daten):
+        self.writer.update_member(
+            excel_datei,
+            member_id,
+            daten
+        )
+
+    def archive_member(self, excel_datei, member_id):
+        self.writer.archive_member(
+            excel_datei,
+            member_id
+        )

@@ -2,7 +2,7 @@ import shutil
 from datetime import datetime
 from openpyxl import load_workbook
 
-from modules.constants import SHEET_MEMBERS
+from modules.constants import SHEET_MEMBERS, COL_MEMBER_ID
 
 
 class MemberWriter:
@@ -22,6 +22,19 @@ class MemberWriter:
             if ws.cell(row=1, column=col).value
         }
 
+    def _find_row_by_member_id(self, ws, member_id):
+        headers = self._headers(ws)
+        id_col = headers.get(COL_MEMBER_ID)
+
+        if not id_col:
+            return None
+
+        for row in range(2, ws.max_row + 1):
+            if ws.cell(row=row, column=id_col).value == member_id:
+                return row
+
+        return None
+
     def add_member(self, excel_datei, daten):
         self._backup(excel_datei)
 
@@ -33,9 +46,33 @@ class MemberWriter:
 
         for feld, wert in daten.items():
             if feld in headers:
-                ws.cell(
-                    row=neue_zeile,
-                    column=headers[feld]
-                ).value = wert
+                ws.cell(row=neue_zeile, column=headers[feld]).value = wert
 
         wb.save(excel_datei)
+
+    def update_member(self, excel_datei, member_id, daten):
+        self._backup(excel_datei)
+
+        wb = load_workbook(excel_datei)
+        ws = wb[SHEET_MEMBERS]
+
+        headers = self._headers(ws)
+        zeile = self._find_row_by_member_id(ws, member_id)
+
+        if zeile is None:
+            raise ValueError(f"Mitglied nicht gefunden: {member_id}")
+
+        for feld, wert in daten.items():
+            if feld in headers:
+                ws.cell(row=zeile, column=headers[feld]).value = wert
+
+        wb.save(excel_datei)
+
+    def archive_member(self, excel_datei, member_id):
+        self.update_member(
+            excel_datei,
+            member_id,
+            {
+                "STATUS": "Archiviert"
+            }
+        )
