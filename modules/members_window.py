@@ -3,6 +3,7 @@ import customtkinter as ctk
 from modules.member_service import MemberService
 from modules.member_window import MemberWindow
 from tkinter import messagebox
+from modules.widgets.search_bar import SearchBar
 
 
 class MembersWindow(ctk.CTkToplevel):
@@ -30,6 +31,18 @@ class MembersWindow(ctk.CTkToplevel):
             fg_color="transparent"
         )
         toolbar.pack(pady=5)
+
+        self.search = SearchBar(
+            self,
+            callback=self.filter_members,
+            placeholder="Mitglieder suchen..."
+        )
+
+        self.search.pack(
+            fill="x",
+            padx=20,
+            pady=(5, 10)
+        )
 
         ctk.CTkButton(
             toolbar,
@@ -72,12 +85,17 @@ class MembersWindow(ctk.CTkToplevel):
         self.selected_frame = None    
 
         df = self.service.load_members(self.excel_datei)
+        self.df = df.copy()
         df = df.dropna(how="all")
 
         if "STATUS" in df.columns:
             df = df[
                 df["STATUS"].astype(str).str.lower() != "archiviert"
             ]
+
+        self.draw_members(df)
+
+    def draw_members(self, df):
 
         columns = [
             "MEMBER_ID",
@@ -127,7 +145,7 @@ class MembersWindow(ctk.CTkToplevel):
                 label.bind(
                     "<Button-1>",
                     lambda event, r=row_data, f=row_frame: self.select_member(r, f)
-                )
+                )            
                 
     def neues_mitglied(self):
 
@@ -177,7 +195,8 @@ class MembersWindow(ctk.CTkToplevel):
         antwort = messagebox.askyesno(
             "Mitglied archivieren",
             f"Soll {self.selected_member['VORNAME']} "
-            f"{self.selected_member['NACHNAME']} archiviert werden?"
+            f"{self.selected_member['NACHNAME']} archiviert werden?",
+            parent=self
         )
 
         if not antwort:
@@ -188,4 +207,31 @@ class MembersWindow(ctk.CTkToplevel):
             self.selected_member["MEMBER_ID"]
         )
 
-        self.load_members()              
+        self.load_members()       
+
+    def filter_members(self, text):
+
+        text = text.strip().lower()
+
+        if text == "":
+            self.load_members()
+            return
+
+        df = self.df.copy()
+
+        df = df.dropna(how="all")
+
+        if "STATUS" in df.columns:
+            df = df[
+                df["STATUS"].astype(str).str.lower() != "archiviert"
+            ]
+
+        mask = (
+            df["VORNAME"].astype(str).str.lower().str.contains(text)
+            |
+            df["NACHNAME"].astype(str).str.lower().str.contains(text)
+            |
+            df["MEMBER_ID"].astype(str).str.lower().str.contains(text)
+        )
+
+        self.draw_members(df[mask])          

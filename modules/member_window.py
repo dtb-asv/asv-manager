@@ -16,7 +16,10 @@ class MemberWindow(ctk.CTkToplevel):
         
         super().__init__(parent)
 
-        self.title("Neues Mitglied")
+        if member_data:
+            self.title("Mitglied bearbeiten")
+        else:
+            self.title("Neues Mitglied")
         self.geometry("450x420")
         self.grab_set()
         self.excel_datei = parent.excel_datei
@@ -24,11 +27,25 @@ class MemberWindow(ctk.CTkToplevel):
         self.on_saved = on_saved
         self.member_data = member_data
 
+        titel = "👥 Neues Mitglied"
+
+        if member_data:
+            titel = "✏ Mitglied bearbeiten"
+
         ctk.CTkLabel(
             self,
-            text="👥 Neues Mitglied",
+            text=titel,
             font=("Segoe UI", 24, "bold")
         ).pack(pady=20)
+
+        if self.member_data:
+
+            ctk.CTkLabel(
+                self,
+                text=f"🆔 {self.member_data['MEMBER_ID']}",
+                font=("Segoe UI", 15, "bold"),
+                text_color=("gray30", "gray80")
+            ).pack(pady=(0, 15))
 
         self.vorname = ctk.CTkEntry(
             self,
@@ -57,9 +74,14 @@ class MemberWindow(ctk.CTkToplevel):
             command=self.destroy
         ).pack(side="left", padx=10)
 
+        button_text = "Speichern"
+
+        if member_data:
+            button_text = "Änderungen speichern"
+
         ctk.CTkButton(
             button_frame,
-            text="Speichern",
+            text=button_text,
             command=self.speichern
         ).pack(side="left", padx=10)
 
