@@ -60,6 +60,9 @@ class MemberService:
 
     def update_member(self, excel_datei, member_id, daten):
 
+        grund = daten.pop("_GRUND", "")
+        bemerkung = daten.pop("_BEMERKUNG", "")
+
         self.writer.update_member(
             excel_datei,
             member_id,
@@ -69,7 +72,7 @@ class MemberService:
         objekt = (
             f"{daten.get('VORNAME', '')} "
             f"{daten.get('NACHNAME', '')}"
-        )
+        ).strip()
 
         self.history.log(
             excel_datei=excel_datei,
@@ -78,8 +81,8 @@ class MemberService:
             objekt=objekt,
             excel_zeile="",
             game_id=member_id,
-            grund="",
-            bemerkung="Mitglied wurde bearbeitet",
+            grund=grund,
+            bemerkung=bemerkung,
             benutzer="System"
         )
 

@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 from modules.excel_writer import ExcelWriter
 from modules.game_service import GameService
+from modules.widgets.change_reason_dialog import ChangeReasonDialog
 
 
 class AddGameWindow(ctk.CTkToplevel):
@@ -129,11 +130,24 @@ class AddGameWindow(ctk.CTkToplevel):
 
             if self.is_edit:
 
+                dialog = ChangeReasonDialog(
+                    self,
+                    title="Spiel ändern"
+                )
+
+                self.wait_window(dialog)
+
+                if dialog.result is None:
+                    return
+
+                daten["_GRUND"] = dialog.result["grund"]
+                daten["_BEMERKUNG"] = dialog.result["bemerkung"]
+
                 self.service.update_game(
-                self.excel_datei,
-                int(self.edit_data["_EXCEL_ROW"]),
-                daten
-            )
+                    self.excel_datei,
+                    int(self.edit_data["_EXCEL_ROW"]),
+                    daten
+                )
 
             else:
 
@@ -145,7 +159,7 @@ class AddGameWindow(ctk.CTkToplevel):
             if self.on_saved:
                 self.on_saved()
 
-            if close_after:
+            if self.is_edit or close_after:
 
                 self.destroy()
 
@@ -153,7 +167,8 @@ class AddGameWindow(ctk.CTkToplevel):
 
                 messagebox.showinfo(
                     "Gespeichert",
-                    "Änderungen wurden gespeichert."
+                    "Änderungen wurden gespeichert.",
+                    parent=self
                 )
 
         except PermissionError:

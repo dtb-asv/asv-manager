@@ -19,6 +19,7 @@ from version import *
 from modules.dashboard import Dashboard
 from modules.excel_reader import ExcelReader
 from modules.poster_generator import PosterGenerator
+from modules.teams_window import TeamsWindow
 
 
 ctk.set_appearance_mode("dark")
@@ -67,30 +68,35 @@ class ASVManager(ctk.CTk):
             text=f"Version {VERSION}"
         ).pack(pady=(0, 25))
 
+        
         menus = [
             "🏠 Dashboard",
+            "⚽ Mannschaften",
+            "👥 Mitglieder",
             "📅 Spiele",
             "➕ Neues Spiel",
             "🖼 Poster",
             "📅 Kalender",
             "☁ GitHub",
             "⚙ Einstellungen",
-            "ℹ Info",
-            "👥 Mitglieder"
+            "ℹ Info"
             ]
 
         for menu in menus:
 
             command = None
 
-            if menu == "➕ Neues Spiel":
-                command = self.neues_spiel
+            if menu == "⚽ Mannschaften":
+                command = self.zeige_mannschaften  
+
+            if menu == "👥 Mitglieder":
+                command = self.zeige_mitglieder      
 
             if menu == "📅 Spiele":
                 command = self.zeige_spiele
 
-            if menu == "👥 Mitglieder":
-                command = self.zeige_mitglieder    
+            if menu == "➕ Neues Spiel":
+                command = self.neues_spiel
 
             ctk.CTkButton(
                 sidebar,
@@ -341,6 +347,20 @@ class ASVManager(ctk.CTk):
             return
 
         MembersWindow(self, excel_datei)
+
+    def zeige_mannschaften(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        TeamsWindow(self, excel_datei)    
 
 def start_gui():
     app = ASVManager()

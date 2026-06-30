@@ -26,6 +26,10 @@ class GameService:
         return self.reader.df.copy()
 
     def update_game(self, excel_datei, excel_zeile, daten):
+
+        grund = daten.pop("_GRUND", "")
+        bemerkung = daten.pop("_BEMERKUNG", "")
+
         game_id = self.get_game_id_by_excel_row(
             excel_datei,
             excel_zeile
@@ -50,8 +54,8 @@ class GameService:
             objekt=objekt,
             excel_zeile=excel_zeile,
             game_id=game_id,
-            grund="",
-            bemerkung="Spiel wurde bearbeitet",
+            grund=grund,
+            bemerkung=bemerkung,
             benutzer="System"
         )
 

@@ -3,6 +3,7 @@ from tkinter import messagebox
 
 from modules.widgets.calendar_entry import CalendarEntry
 from modules.member_service import MemberService
+from modules.widgets.change_reason_dialog import ChangeReasonDialog
 
 
 class MemberWindow(ctk.CTkToplevel):
@@ -111,6 +112,20 @@ class MemberWindow(ctk.CTkToplevel):
         }
 
         if self.member_data:
+
+            dialog = ChangeReasonDialog(
+                self,
+                title="Mitglied ändern"
+            )
+
+            self.wait_window(dialog)
+
+            if dialog.result is None:
+                return
+
+            daten["_GRUND"] = dialog.result["grund"]
+            daten["_BEMERKUNG"] = dialog.result["bemerkung"]
+
             self.service.update_member(
                 self.excel_datei,
                 self.member_data["MEMBER_ID"],

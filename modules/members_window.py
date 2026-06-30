@@ -131,6 +131,11 @@ class MembersWindow(ctk.CTkToplevel):
                 lambda event, r=row_data, f=row_frame: self.select_member(r, f)
             )
 
+            row_frame.bind(
+                "<Double-Button-1>",
+                lambda event: self.bearbeiten_mitglied()
+            )
+
             for col in columns:
 
                 label = ctk.CTkLabel(
@@ -145,7 +150,12 @@ class MembersWindow(ctk.CTkToplevel):
                 label.bind(
                     "<Button-1>",
                     lambda event, r=row_data, f=row_frame: self.select_member(r, f)
-                )            
+                )   
+
+                label.bind(
+                    "<Double-Button-1>",
+                    lambda event: self.bearbeiten_mitglied()
+                )         
                 
     def neues_mitglied(self):
 
