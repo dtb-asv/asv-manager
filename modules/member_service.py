@@ -56,7 +56,8 @@ class MemberService:
         daten["EINTRITT"] = datetime.now().strftime("%d.%m.%Y")
         daten["STATUS"] = "Aktiv"
 
-        self.writer.add_member(excel_datei, daten)
+        member_id = self.writer.add_member(excel_datei, daten)
+        return member_id
 
     def update_member(self, excel_datei, member_id, daten):
 

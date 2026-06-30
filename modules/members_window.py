@@ -4,6 +4,7 @@ from modules.member_service import MemberService
 from modules.member_window import MemberWindow
 from tkinter import messagebox
 from modules.widgets.search_bar import SearchBar
+from modules.widgets.list_toolbar import ListToolbar
 
 
 class MembersWindow(ctk.CTkToplevel):

@@ -20,6 +20,8 @@ from modules.dashboard import Dashboard
 from modules.excel_reader import ExcelReader
 from modules.poster_generator import PosterGenerator
 from modules.teams_window import TeamsWindow
+from modules.configuration_service import ConfigurationService
+from modules.roles_window import RolesWindow
 
 
 ctk.set_appearance_mode("dark")
@@ -38,6 +40,8 @@ class ASVManager(ctk.CTk):
         self.reader = ExcelReader()
         self.poster_generator = PosterGenerator()
         self.settings = Settings()
+
+        self.configuration_service = ConfigurationService()
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -79,6 +83,7 @@ class ASVManager(ctk.CTk):
             "📅 Kalender",
             "☁ GitHub",
             "⚙ Einstellungen",
+            "⚙ Rollen",
             "ℹ Info"
             ]
 
@@ -97,6 +102,9 @@ class ASVManager(ctk.CTk):
 
             if menu == "➕ Neues Spiel":
                 command = self.neues_spiel
+
+            if menu == "⚙ Rollen":
+                command = self.zeige_rollen    
 
             ctk.CTkButton(
                 sidebar,
@@ -246,6 +254,8 @@ class ASVManager(ctk.CTk):
 
             self.reader.load(file)
 
+            self.configuration_service.ensure_configuration_sheets(file)
+
             stats = self.reader.statistik()
             spiel = self.reader.naechstes_spiel()
 
@@ -361,6 +371,20 @@ class ASVManager(ctk.CTk):
             return
 
         TeamsWindow(self, excel_datei)    
+
+    def zeige_rollen(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        RolesWindow(self, excel_datei)    
 
 def start_gui():
     app = ASVManager()
