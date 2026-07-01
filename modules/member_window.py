@@ -159,9 +159,15 @@ class MemberWindow(ctk.CTkToplevel):
                 self.get_selected_role_codes()
             )
         else:
-            self.service.add_member(
+            member_id = self.service.add_member(
                 self.excel_datei,
                 daten
+            )
+
+            self.member_role_service.save_roles(
+                self.excel_datei,
+                member_id,
+                self.get_selected_role_codes()
             )
 
         if self.on_saved:

@@ -52,12 +52,14 @@ class MemberService:
         return f"MEMBER{next_number:06d}"
 
     def add_member(self, excel_datei, daten):
-        daten["MEMBER_ID"] = self.next_member_id(excel_datei)
+
         daten["EINTRITT"] = datetime.now().strftime("%d.%m.%Y")
         daten["STATUS"] = "Aktiv"
 
-        member_id = self.writer.add_member(excel_datei, daten)
-        return member_id
+        return self.writer.add_member(
+            excel_datei,
+            daten
+        )
 
     def update_member(self, excel_datei, member_id, daten):
 
