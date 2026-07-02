@@ -6,7 +6,8 @@ from modules.constants import (
     SHEET_CFG_RIGHTS,
     SHEET_CFG_ROLE_RIGHTS,
     SHEET_CFG_LOOKUPS,
-    SHEET_MEMBER_ROLES
+    SHEET_MEMBER_ROLES,
+    SHEET_TEAM_ASSIGNMENTS
 )
 
 
@@ -68,6 +69,18 @@ class ConfigurationService:
                 "AKTIV",
                 "BEMERKUNG"
             ])
+
+        if SHEET_TEAM_ASSIGNMENTS not in wb.sheetnames:
+            ws = wb.create_sheet(SHEET_TEAM_ASSIGNMENTS)
+            ws.append([
+                "TEAM_ID",
+                "MEMBER_ID",
+                "ROLE_CODE",
+                "VON",
+                "BIS",
+                "AKTIV",
+                "BEMERKUNG"
+            ])    
 
         self.ensure_default_lookups(wb)    
 
