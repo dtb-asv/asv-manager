@@ -215,6 +215,7 @@ class TeamWindow(ctk.CTkToplevel):
             pady=10
         )
 
+       
         if not self.team_data:
             ctk.CTkLabel(
                 self.tab_mitglieder,
@@ -222,6 +223,13 @@ class TeamWindow(ctk.CTkToplevel):
                 font=("Segoe UI", 14)
             ).pack(pady=30)
             return
+
+        roles = self.lookup_service.get_lookup_list(
+            self.excel_datei,
+            "ROLE"
+        )
+
+        self.assignment.set_roles(roles)    
 
         df = self.member_service.load_members(self.excel_datei)
         df = df.dropna(how="all")
@@ -273,11 +281,17 @@ class TeamWindow(ctk.CTkToplevel):
 
         for item in self.assignment.right_items:
 
+            role = item.get("role", "SPIELER")
+
+            role_code = role.upper()
+            role_code = role_code.replace("-", "_")
+            role_code = role_code.replace(" ", "_")
+
             assignments.append(
                 (
                     item["id"],
-                    "SPIELER"
+                    role_code
                 )
             )
 
-        return assignments      
+        return assignments

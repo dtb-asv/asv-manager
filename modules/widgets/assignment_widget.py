@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from modules.widgets.searchable_list import SearchableList
+from modules.widgets.assignment_role_dialog import AssignmentRoleDialog
 
 
 class AssignmentWidget(ctk.CTkFrame):
@@ -16,6 +17,7 @@ class AssignmentWidget(ctk.CTkFrame):
 
         self.left_items = []
         self.right_items = []
+        self.roles = ["SPIELER"]
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
@@ -94,6 +96,10 @@ class AssignmentWidget(ctk.CTkFrame):
         self.right_items = items
         self.right.set_items(items)
 
+    def set_roles(self, roles):
+
+        self.roles = roles    
+
 
     def get_left_selected(self):
 
@@ -106,23 +112,38 @@ class AssignmentWidget(ctk.CTkFrame):
 
     def move_to_right(self, item):
 
+        dialog = AssignmentRoleDialog(
+            self,
+            item,
+            self.roles
+        )
+
+        self.wait_window(dialog)
+
+        if dialog.result is None:
+            return
+
         if item in self.left_items:
             self.left_items.remove(item)
 
-        if item not in self.right_items:
-            self.right_items.append(item)
+        self.right_items.append({
+            "id": item["id"],
+            "text": item["text"],
+            "role": dialog.result
+        })
 
         self.left.set_items(self.left_items)
         self.right.set_items(self.right_items)
-
-
     def move_to_left(self, item):
 
         if item in self.right_items:
             self.right_items.remove(item)
 
         if item not in self.left_items:
-            self.left_items.append(item)
+            self.left_items.append({
+                "id": item["id"],
+                "text": item["text"]
+            })
 
         self.left.set_items(self.left_items)
         self.right.set_items(self.right_items)    
