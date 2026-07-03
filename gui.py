@@ -22,6 +22,7 @@ from modules.poster_generator import PosterGenerator
 from modules.teams_window import TeamsWindow
 from modules.configuration_service import ConfigurationService
 from modules.roles_window import RolesWindow
+from modules.trainings_window import TrainingsWindow
 
 
 ctk.set_appearance_mode("dark")
@@ -78,6 +79,7 @@ class ASVManager(ctk.CTk):
             "⚽ Mannschaften",
             "👥 Mitglieder",
             "📅 Spiele",
+            "🏃 Trainings",
             "➕ Neues Spiel",
             "🖼 Poster",
             "📅 Kalender",
@@ -99,6 +101,9 @@ class ASVManager(ctk.CTk):
 
             if menu == "📅 Spiele":
                 command = self.zeige_spiele
+
+            if menu == "🏃 Trainings":
+                command = self.zeige_trainings    
 
             if menu == "➕ Neues Spiel":
                 command = self.neues_spiel
@@ -311,7 +316,21 @@ class ASVManager(ctk.CTk):
             )
             return
 
-        GamesWindow(self, excel_datei)                  
+        GamesWindow(self, excel_datei)   
+
+    def zeige_trainings(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        TrainingsWindow(self, excel_datei)                   
 
     def start(self):
         self.status.insert(

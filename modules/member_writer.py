@@ -1,7 +1,6 @@
 import shutil
 from datetime import datetime
 from openpyxl import load_workbook
-from modules.id_generator import IdGenerator
 
 from modules.constants import SHEET_MEMBERS, COL_MEMBER_ID
 
@@ -44,14 +43,7 @@ class MemberWriter:
 
         headers = self._headers(ws)
 
-        member_id = IdGenerator.next_id(
-            excel_datei,
-            SHEET_MEMBERS,
-            COL_MEMBER_ID,
-            "MEMBER"
-        )
-
-        daten[COL_MEMBER_ID] = member_id
+        
         neue_zeile = ws.max_row + 1
 
         for feld, wert in daten.items():
@@ -59,7 +51,7 @@ class MemberWriter:
                 ws.cell(row=neue_zeile, column=headers[feld]).value = wert
 
         wb.save(excel_datei)
-        return member_id
+        return daten[COL_MEMBER_ID]
 
     def update_member(self, excel_datei, member_id, daten):
         self._backup(excel_datei)

@@ -5,6 +5,8 @@ from openpyxl import load_workbook
 from modules.constants import SHEET_MEMBERS
 from modules.member_writer import MemberWriter
 from modules.history_service import HistoryService
+from modules.id_generator import IdGenerator
+from modules.constants import COL_MEMBER_ID
 
 
 class MemberService:
@@ -52,6 +54,13 @@ class MemberService:
         return f"MEMBER{next_number:06d}"
 
     def add_member(self, excel_datei, daten):
+
+        daten[COL_MEMBER_ID] = IdGenerator.next_id(
+            excel_datei,
+            SHEET_MEMBERS,
+            COL_MEMBER_ID,
+            "MEMBER"
+        )
 
         daten["EINTRITT"] = datetime.now().strftime("%d.%m.%Y")
         daten["STATUS"] = "Aktiv"

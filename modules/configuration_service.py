@@ -7,7 +7,9 @@ from modules.constants import (
     SHEET_CFG_ROLE_RIGHTS,
     SHEET_CFG_LOOKUPS,
     SHEET_MEMBER_ROLES,
-    SHEET_TEAM_ASSIGNMENTS
+    SHEET_TRAININGS,
+    SHEET_TEAM_ASSIGNMENTS,
+    SHEET_TRAINING_PARTICIPANTS
 )
 
 
@@ -80,9 +82,37 @@ class ConfigurationService:
                 "BIS",
                 "AKTIV",
                 "BEMERKUNG"
-            ])    
+            ])  
 
-        self.ensure_default_lookups(wb)    
+        if SHEET_TRAININGS not in wb.sheetnames:
+            ws = wb.create_sheet(SHEET_TRAININGS)
+            ws.append([
+                "TRAINING_ID",
+                "TEAM_ID",
+                "DATUM",
+                "STARTZEIT",
+                "ENDZEIT",
+                "ORT",
+                "TRAINING_TYPE",
+                "STATUS",
+                "AKTIV",
+                "BEMERKUNG"
+            ])      
+
+        self.ensure_default_lookups(wb)   
+
+        if SHEET_TRAINING_PARTICIPANTS not in wb.sheetnames:
+
+            ws = wb.create_sheet(SHEET_TRAINING_PARTICIPANTS)
+
+            ws.append([
+                "TRAINING_ID",
+                "MEMBER_ID",
+                "ROLE",
+                "STATUS",
+                "BEMERKUNG",
+                "AKTIV"
+            ]) 
 
         wb.save(excel_datei)
 
