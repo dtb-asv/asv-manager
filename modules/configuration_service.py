@@ -8,7 +8,12 @@ from modules.constants import (
     SHEET_TRAININGS,
     SHEET_TEAM_ASSIGNMENTS,
     SHEET_TRAINING_PARTICIPANTS,
-    SHEET_TRAINING_SCHEDULES
+    SHEET_TRAINING_SCHEDULES,
+    SHEET_CLUB,
+    SHEET_SEASONS,
+    SHEET_FACILITIES,
+    SHEET_PLACES,
+    SHEET_DEPARTMENTS
 )
 
 
@@ -127,6 +132,63 @@ class ConfigurationService:
                 "AKTIV",
                 "BEMERKUNG"
             ])    
+
+        if SHEET_CLUB not in wb.sheetnames:
+            ws = wb.create_sheet(SHEET_CLUB)
+            ws.append([
+                "CLUB_ID",
+                "NAME",
+                "LANDESVERBAND",
+                "LOGO",
+                "AKTIV"
+            ])
+
+        if SHEET_SEASONS not in wb.sheetnames:
+            ws = wb.create_sheet(SHEET_SEASONS)
+            ws.append([
+                "SAISON_ID",
+                "NAME",
+                "VON",
+                "BIS",
+                "AKTIV",
+                "BEMERKUNG"
+            ])
+
+        if SHEET_FACILITIES not in wb.sheetnames:
+            ws = wb.create_sheet(SHEET_FACILITIES)
+            ws.append([
+                "FACILITY_ID",
+                "NAME",
+                "ORT",
+                "ADRESSE",
+                "AKTIV",
+                "BEMERKUNG"
+            ])
+
+        if SHEET_PLACES not in wb.sheetnames:
+            ws = wb.create_sheet(SHEET_PLACES)
+            ws.append([
+                "PLACE_ID",
+                "FACILITY_ID",
+                "NAME",
+                "TRAINING_KAPAZITAET",
+                "IST_SPIELPLATZ",
+                "SPIEL_KAPAZITAET",
+                "AKTIV",
+                "BEMERKUNG"
+            ])  
+
+        if SHEET_DEPARTMENTS not in wb.sheetnames:
+
+            ws = wb.create_sheet(SHEET_DEPARTMENTS)
+
+            ws.append([
+                "DEPARTMENT_ID",
+                "NAME",
+                "LEITER_MEMBER_ID",
+                "AKTIV",
+                "BEMERKUNG"
+            ])      
 
         wb.save(excel_datei)
 

@@ -11,8 +11,8 @@ Diese Datei muss normalerweise nie geändert werden.
 # ===========================================
 
 # Fenstergröße
-APP_WIDTH = 1000
-APP_HEIGHT = 700
+APP_WIDTH = 1450
+APP_HEIGHT = 800
 
 # Vereinsfarben
 COLOR_BACKGROUND = "#1A1A1A"     # Dunkelgrau / Schwarz

@@ -12,10 +12,8 @@ from customtkinter import CTkImage
 from tkinter import filedialog, messagebox
 from modules.games_window import GamesWindow
 from PIL import Image
-
 from config import *
 from version import *
-
 from modules.dashboard import Dashboard
 from modules.excel_reader import ExcelReader
 from modules.poster_generator import PosterGenerator
@@ -23,6 +21,7 @@ from modules.teams_window import TeamsWindow
 from modules.configuration_service import ConfigurationService
 from modules.roles_window import RolesWindow
 from modules.trainings_window import TrainingsWindow
+from modules.department_window import DepartmentWindow
 
 
 ctk.set_appearance_mode("dark")
@@ -36,7 +35,8 @@ class ASVManager(ctk.CTk):
 
         self.title(f"{PROGRAMMNAME} {VERSION}")
         self.geometry(f"{APP_WIDTH}x{APP_HEIGHT}")
-        self.resizable(False, False)
+        self.minsize(1300, 800)
+        self.resizable(True, True)
 
         self.reader = ExcelReader()
         self.poster_generator = PosterGenerator()
@@ -77,6 +77,7 @@ class ASVManager(ctk.CTk):
         menus = [
             "🏠 Dashboard",
             "⚽ Mannschaften",
+            "🏢 Bereiche",
             "👥 Mitglieder",
             "📅 Spiele",
             "🏃 Trainings",
@@ -95,6 +96,9 @@ class ASVManager(ctk.CTk):
 
             if menu == "⚽ Mannschaften":
                 command = self.zeige_mannschaften  
+
+            if menu == "🏢 Bereiche":
+                command = self.zeige_bereiche    
 
             if menu == "👥 Mitglieder":
                 command = self.zeige_mitglieder      
@@ -330,7 +334,21 @@ class ASVManager(ctk.CTk):
             )
             return
 
-        TrainingsWindow(self, excel_datei)                   
+        TrainingsWindow(self, excel_datei)      
+
+    def zeige_bereiche(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        DepartmentWindow(self, excel_datei)              
 
     def start(self):
         self.status.insert(
