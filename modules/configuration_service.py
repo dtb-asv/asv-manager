@@ -1,6 +1,4 @@
 from openpyxl import load_workbook
-from modules.constants import SHEET_CFG_LOOKUPS
-
 from modules.constants import (
     SHEET_CFG_ROLES,
     SHEET_CFG_RIGHTS,
@@ -9,7 +7,8 @@ from modules.constants import (
     SHEET_MEMBER_ROLES,
     SHEET_TRAININGS,
     SHEET_TEAM_ASSIGNMENTS,
-    SHEET_TRAINING_PARTICIPANTS
+    SHEET_TRAINING_PARTICIPANTS,
+    SHEET_TRAINING_SCHEDULES
 )
 
 
@@ -99,8 +98,6 @@ class ConfigurationService:
                 "BEMERKUNG"
             ])      
 
-        self.ensure_default_lookups(wb)   
-
         if SHEET_TRAINING_PARTICIPANTS not in wb.sheetnames:
 
             ws = wb.create_sheet(SHEET_TRAINING_PARTICIPANTS)
@@ -113,6 +110,23 @@ class ConfigurationService:
                 "BEMERKUNG",
                 "AKTIV"
             ]) 
+
+        if SHEET_TRAINING_SCHEDULES not in wb.sheetnames:
+
+            ws = wb.create_sheet(SHEET_TRAINING_SCHEDULES)
+
+            ws.append([
+                "SCHEDULE_ID",
+                "TEAM_ID",
+                "SAISON",
+                "WOCHENTAG",
+                "BEGINN",
+                "ENDE",
+                "PLATZ",
+                "TRAINING_TYPE",
+                "AKTIV",
+                "BEMERKUNG"
+            ])    
 
         wb.save(excel_datei)
 

@@ -77,6 +77,9 @@ class SearchableList(ctk.CTkFrame):
 
             display = item["text"]
 
+            if "role" in item:
+                display += f"   [{item['role']}]"
+
             if text not in display.lower():
                 continue
 

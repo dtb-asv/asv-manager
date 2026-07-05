@@ -29,7 +29,7 @@ class TrainingParticipantService:
             df["TRAINING_ID"].astype(str) == str(training_id)
         ]
 
-   def save_participants(
+    def save_participants(
         self,
         excel_datei,
         training_id,

@@ -56,7 +56,8 @@ class AssignmentWidget(ctk.CTkFrame):
         self.btn_add = ctk.CTkButton(
             button_frame,
             text="▶",
-            width=45
+            width=45,
+            command=self.add_selected
         )
 
         self.btn_add.pack(pady=10)
@@ -64,7 +65,8 @@ class AssignmentWidget(ctk.CTkFrame):
         self.btn_remove = ctk.CTkButton(
             button_frame,
             text="◀",
-            width=45
+            width=45,
+            command=self.remove_selected
         )
 
         self.btn_remove.pack(pady=10)
@@ -74,7 +76,7 @@ class AssignmentWidget(ctk.CTkFrame):
         self.right = SearchableList(
             self,
             right_title,
-            on_double_click=self.move_to_left
+            on_double_click=self.edit_role
         )
 
         self.right.grid(
@@ -93,8 +95,28 @@ class AssignmentWidget(ctk.CTkFrame):
 
     def set_right_items(self, items):
 
+        role_order = {
+            "TRAINER": 10,
+            "CO_TRAINER": 20,
+            "TORMANNTRAINER": 30,
+            "BETREUER": 40,
+            "SPIELER": 50
+        }
+
+        items = sorted(
+            items,
+            key=lambda x: (
+                role_order.get(
+                    str(x.get("role", "")).upper().replace("-", "_").replace(" ", "_"),
+                    999
+                ),
+                x.get("text", "")
+            )
+        )
+
         self.right_items = items
         self.right.set_items(items)
+
 
     def set_roles(self, roles):
 
@@ -133,7 +155,9 @@ class AssignmentWidget(ctk.CTkFrame):
         })
 
         self.left.set_items(self.left_items)
-        self.right.set_items(self.right_items)
+        self.set_right_items(self.right_items)
+
+
     def move_to_left(self, item):
 
         if item in self.right_items:
@@ -146,4 +170,40 @@ class AssignmentWidget(ctk.CTkFrame):
             })
 
         self.left.set_items(self.left_items)
-        self.right.set_items(self.right_items)    
+        self.set_right_items(self.right_items)   
+
+    def edit_role(self, item):
+
+        dialog = AssignmentRoleDialog(
+            self,
+            item,
+            self.roles
+        )
+
+        self.wait_window(dialog)
+
+        if dialog.result is None:
+            return
+
+        item["role"] = dialog.result
+
+        self.set_right_items(self.right_items)   
+
+    def add_selected(self):
+
+        item = self.get_left_selected()
+
+        if item is None:
+            return
+
+        self.move_to_right(item)
+
+
+    def remove_selected(self):
+
+        item = self.get_right_selected()
+
+        if item is None:
+            return
+
+        self.move_to_left(item)    

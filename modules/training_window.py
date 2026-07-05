@@ -3,6 +3,10 @@ import customtkinter as ctk
 from modules.team_service import TeamService
 from modules.widgets.calendar_entry import CalendarEntry
 from modules.training_service import TrainingService
+from modules.member_service import MemberService
+from modules.lookup_service import LookupService
+from modules.training_participant_service import TrainingParticipantService
+from modules.widgets.assignment_widget import AssignmentWidget
 
 
 class TrainingWindow(ctk.CTkToplevel):
@@ -23,6 +27,10 @@ class TrainingWindow(ctk.CTkToplevel):
 
         self.service = TrainingService()
         self.team_service = TeamService()
+
+        self.member_service = MemberService()
+        self.lookup_service = LookupService()
+        self.participant_service = TrainingParticipantService()
 
         if training_data:
             self.title("Training bearbeiten")
@@ -58,15 +66,28 @@ class TrainingWindow(ctk.CTkToplevel):
         self.tab_history = self.tabs.add("History")
 
         self.create_general_tab()
+        self.create_participant_tab()
         self.load_teams()
         if self.training_data:
             self.fill_data()
 
-        ctk.CTkButton(
+        button_frame = ctk.CTkFrame(
             self,
+            fg_color="transparent"
+        )
+        button_frame.pack(pady=20)
+
+        ctk.CTkButton(
+            button_frame,
+            text="Abbrechen",
+            command=self.destroy
+        ).pack(side="left", padx=10)
+
+        ctk.CTkButton(
+            button_frame,
             text="Speichern",
             command=self.speichern
-        ).pack(pady=20)
+        ).pack(side="left", padx=10)
 
     def create_general_tab(self):
         ctk.CTkLabel(
@@ -160,6 +181,100 @@ class TrainingWindow(ctk.CTkToplevel):
 
         self.training_type.set("Training")
 
+    def create_participant_tab(self):
+
+        self.assignment = AssignmentWidget(
+            self.tab_teilnehmer,
+            left_title="Verfügbare Mitglieder",
+            right_title="Training"
+        )
+
+        self.assignment.pack(
+            fill="both",
+            expand=True,
+            padx=10,
+            pady=10
+        )
+
+        if not self.training_data:
+
+            ctk.CTkLabel(
+                self.tab_teilnehmer,
+                text="Teilnehmer können erst nach dem Speichern des Trainings zugeordnet werden.",
+                font=("Segoe UI", 14)
+            ).pack(pady=30)
+
+            return
+
+        roles = self.lookup_service.get_lookup_list(
+            self.excel_datei,
+            "ROLE"
+        )
+
+        self.assignment.set_roles(roles)
+
+        df = self.member_service.load_members(
+            self.excel_datei
+        )
+
+        df = df.dropna(how="all")
+
+        if "STATUS" in df.columns:
+            df = df[
+                df["STATUS"].astype(str).str.lower() != "archiviert"
+            ]
+
+        participants = self.participant_service.load_participants(
+            self.excel_datei,
+            self.training_data["TRAINING_ID"]
+        )
+
+        assigned_ids = set()
+        participant_roles = {}
+
+        if not participants.empty:
+
+            assigned_ids = set(
+                participants["MEMBER_ID"].astype(str).tolist()
+            )
+
+            for _, row in participants.iterrows():
+
+                participant_roles[
+                    str(row["MEMBER_ID"])
+                ] = row.get("ROLE", "SPIELER")
+
+        left_items = []
+        right_items = []    
+        
+        for _, row in df.iterrows():
+
+            member_id = str(row.get("MEMBER_ID", "")).strip()
+
+            name = (
+                f"{row.get('VORNAME','')} "
+                f"{row.get('NACHNAME','')}"
+            ).strip()
+
+            if not member_id or not name:
+                continue
+
+            item = {
+                "id": member_id,
+                "text": name
+            }
+
+            if member_id in participant_roles:
+                item["role"] = participant_roles[member_id]
+
+            if member_id in assigned_ids:
+                right_items.append(item)
+            else:
+                left_items.append(item)
+
+        self.assignment.set_left_items(left_items)
+        self.assignment.set_right_items(right_items)       
+
     def load_teams(self):
 
         df = self.team_service.load_teams(
@@ -214,6 +329,27 @@ class TrainingWindow(ctk.CTkToplevel):
                 "Training"
             )
         )
+
+    def get_selected_participants(self):
+
+        participants = []
+
+        for item in self.assignment.right_items:
+
+            role = item.get("role", "SPIELER")
+
+            role_code = role.upper()
+            role_code = role_code.replace("-", "_")
+            role_code = role_code.replace(" ", "_")
+
+            participants.append(
+                (
+                    item["id"],
+                    role_code
+                )
+            )
+
+        return participants    
     
     def speichern(self):
 
@@ -235,11 +371,23 @@ class TrainingWindow(ctk.CTkToplevel):
                 daten
             )
 
+            self.participant_service.save_participants(
+                self.excel_datei,
+                self.training_data["TRAINING_ID"],
+                self.get_selected_participants()
+            )    
+
         else:
 
-            self.service.add_training(
+            training_id = self.service.add_training(
                 self.excel_datei,
                 daten
+            )
+
+            self.participant_service.save_participants(
+                self.excel_datei,
+                training_id,
+                self.get_selected_participants()
             )
 
         if self.on_saved:

@@ -26,19 +26,22 @@ class TrainingService:
 
     def add_training(self, excel_datei, daten):
 
-        daten["TRAINING_ID"] = IdGenerator.next_id(
+        training_id = IdGenerator.next_id(
             excel_datei,
             SHEET_TRAININGS,
             "TRAINING_ID",
             PREFIX_TRAINING
         )
 
+        daten["TRAINING_ID"] = training_id
         daten["AKTIV"] = "Ja"
 
-        return self.writer.add_training(
+        self.writer.add_training(
             excel_datei,
             daten
         )
+
+        return training_id
 
     def update_training(
         self,
