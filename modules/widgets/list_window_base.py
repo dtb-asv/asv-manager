@@ -82,6 +82,8 @@ class ListWindowBase(ctk.CTkToplevel):
             command=self.destroy
         ).pack(pady=15)
 
+        self.selected_row = None
+
     def add_toolbar_button(
         self,
         text,
@@ -100,8 +102,11 @@ class ListWindowBase(ctk.CTkToplevel):
 
     def clear_scroll(self):
 
+        self.selected_row = None
+        self.selected_data = None
+
         for widget in self.scroll.winfo_children():
-            widget.destroy() 
+            widget.destroy()
 
     def set_status(self, text):
 
@@ -129,23 +134,76 @@ class ListWindowBase(ctk.CTkToplevel):
                 padx=2
             )
 
-    def create_row(self, values):
+    def create_row(self, values, row_data=None):
 
-        row = ctk.CTkFrame(self.scroll)
+        row = ctk.CTkFrame(
+            self.scroll,
+            fg_color="transparent"
+        )
 
         row.pack(
             fill="x",
             pady=2
         )
 
+        if row_data is not None:
+
+            row.bind(
+                "<Button-1>",
+                lambda event, f=row, r=row_data:
+                    self.select_row(f, r)
+            )
+
         for value in values:
 
-            ctk.CTkLabel(
+            label = ctk.CTkLabel(
                 row,
                 text=str(value),
                 width=180,
                 anchor="w"
-            ).pack(
+            )
+
+            label.pack(
                 side="left",
                 padx=2
-            )                       
+            )
+
+            if row_data is not None:
+
+                label.bind(
+                    "<Button-1>",
+                    lambda event, f=row, r=row_data:
+                        self.select_row(f, r)
+                )
+    def refresh(self):
+
+        self.clear_scroll()
+        self.load_data()
+
+    def select_row(self, frame, row_data):
+
+        if self.selected_row and self.selected_row.winfo_exists():
+
+            self.selected_row.configure(
+                fg_color="transparent"
+            )
+
+        frame.configure(
+            fg_color=("royalblue", "royalblue4")
+        )
+
+        self.selected_row = frame
+        self.selected_data = row_data     
+
+    def create_table(self, dataframe, columns):
+
+        self.create_header(columns)
+
+        for _, row in dataframe.iterrows():
+
+            values = [
+                row.get(col, "")
+                for col in columns
+            ]
+
+            self.create_row(values)                                

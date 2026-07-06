@@ -35,7 +35,7 @@ class ASVManager(ctk.CTk):
 
         self.title(f"{PROGRAMMNAME} {VERSION}")
         self.geometry(f"{APP_WIDTH}x{APP_HEIGHT}")
-        self.minsize(1300, 800)
+        self.minsize(1100, 700)
         self.resizable(True, True)
 
         self.reader = ExcelReader()
@@ -51,7 +51,11 @@ class ASVManager(ctk.CTk):
         self.create_main()
 
     def create_sidebar(self):
-        sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
+        sidebar = ctk.CTkScrollableFrame(
+            self,
+            width=200,
+            corner_radius=0
+        )
         sidebar.grid(row=0, column=0, sticky="ns")
 
         logo = CTkImage(
@@ -73,54 +77,97 @@ class ASVManager(ctk.CTk):
             text=f"Version {VERSION}"
         ).pack(pady=(0, 25))
 
+        self.sidebar = sidebar
         
-        menus = [
-            "🏠 Dashboard",
-            "⚽ Mannschaften",
+        # -----------------------------
+        # Hauptmenü
+        # -----------------------------
+
+        self.add_menu_button(
+            "🏠 Dashboard"
+        )
+
+        # -----------------------------
+        # Vereinsverwaltung
+        # -----------------------------
+
+        self.add_menu_group("Vereinsverwaltung")
+
+        self.add_menu_button(
             "🏢 Bereiche",
+            self.zeige_bereiche
+        )
+
+        # -----------------------------
+        # Sport
+        # -----------------------------
+
+        self.add_menu_group("Sport")
+
+        self.add_menu_button(
+            "⚽ Mannschaften",
+            self.zeige_mannschaften
+        )
+
+        self.add_menu_button(
             "👥 Mitglieder",
-            "📅 Spiele",
+            self.zeige_mitglieder
+        )
+
+        self.add_menu_button(
             "🏃 Trainings",
+            self.zeige_trainings
+        )
+
+        self.add_menu_button(
+            "📅 Spiele",
+            self.zeige_spiele
+        )
+
+        self.add_menu_button(
             "➕ Neues Spiel",
-            "🖼 Poster",
-            "📅 Kalender",
-            "☁ GitHub",
-            "⚙ Einstellungen",
+            self.neues_spiel
+        )
+
+        # -----------------------------
+        # Verwaltung
+        # -----------------------------
+
+        self.add_menu_group("Verwaltung")
+
+        self.add_menu_button(
             "⚙ Rollen",
-            "ℹ Info"
-            ]
+            self.zeige_rollen
+        )
 
-        for menu in menus:
+        self.add_menu_button("🖼 Poster")
+        self.add_menu_button("📅 Kalender")
+        self.add_menu_button("☁ GitHub")
+        self.add_menu_button("⚙ Einstellungen")
+        self.add_menu_button("ℹ Info")
 
-            command = None
+    def add_menu_group(self, title):
 
-            if menu == "⚽ Mannschaften":
-                command = self.zeige_mannschaften  
+        ctk.CTkLabel(
+            self.sidebar,
+            text=title,
+            font=("Segoe UI", 13, "bold"),
+            text_color=("gray40", "gray70")
+        ).pack(
+            anchor="w",
+            padx=18,
+            pady=(12, 4)
+        )
 
-            if menu == "🏢 Bereiche":
-                command = self.zeige_bereiche    
 
-            if menu == "👥 Mitglieder":
-                command = self.zeige_mitglieder      
+    def add_menu_button(self, text, command=None):
 
-            if menu == "📅 Spiele":
-                command = self.zeige_spiele
-
-            if menu == "🏃 Trainings":
-                command = self.zeige_trainings    
-
-            if menu == "➕ Neues Spiel":
-                command = self.neues_spiel
-
-            if menu == "⚙ Rollen":
-                command = self.zeige_rollen    
-
-            ctk.CTkButton(
-                sidebar,
-                text=menu,
-                width=165,
-                command=command
-            ).pack(pady=6)
+        ctk.CTkButton(
+            self.sidebar,
+            text=text,
+            width=165,
+            command=command
+        ).pack(pady=4)        
 
     def create_main(self):
         main = ctk.CTkFrame(self)
