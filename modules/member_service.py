@@ -28,7 +28,11 @@ class MemberService:
                 "EINTRITT",
                 "AUSTRITT",
                 "STATUS",
-                "BEMERKUNG"
+                "BEMERKUNG",
+                "GESCHLECHT",
+                "MOBIL",
+                "SPIELERPASSNUMMER",
+                "EMAIL"
             ])
             wb.save(excel_datei)
 
@@ -63,6 +67,7 @@ class MemberService:
         )
 
         daten["EINTRITT"] = datetime.now().strftime("%d.%m.%Y")
+        daten["AUSTRITT"] = "31.12.9999"
         daten["STATUS"] = "Aktiv"
 
         return self.writer.add_member(

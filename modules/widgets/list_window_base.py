@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from modules.widgets.search_bar import SearchBar
+from modules.widgets.table_view import TableView
 
 
 class ListWindowBase(ctk.CTkToplevel):
@@ -55,9 +56,11 @@ class ListWindowBase(ctk.CTkToplevel):
             pady=(0, 10)
         )
 
-        self.scroll = ctk.CTkScrollableFrame(self)
+        self.table = TableView(self)
 
-        self.scroll.pack(
+        self.scroll = self.table
+
+        self.table.pack(
             fill="both",
             expand=True,
             padx=20,
@@ -102,11 +105,7 @@ class ListWindowBase(ctk.CTkToplevel):
 
     def clear_scroll(self):
 
-        self.selected_row = None
-        self.selected_data = None
-
-        for widget in self.scroll.winfo_children():
-            widget.destroy()
+        self.table.clear()
 
     def set_status(self, text):
 

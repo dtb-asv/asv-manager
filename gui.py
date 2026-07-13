@@ -22,6 +22,8 @@ from modules.configuration_service import ConfigurationService
 from modules.roles_window import RolesWindow
 from modules.trainings_window import TrainingsWindow
 from modules.department_window import DepartmentWindow
+from modules.facility_window import FacilityWindow
+from modules.place_window import PlaceWindow
 
 
 ctk.set_appearance_mode("dark")
@@ -97,6 +99,14 @@ class ASVManager(ctk.CTk):
             "🏢 Bereiche",
             self.zeige_bereiche
         )
+        self.add_menu_button(
+            "🏟 Sportanlagen",
+            self.zeige_sportanlagen
+        )
+        self.add_menu_button(
+            "⚽ Plätze",
+            self.zeige_plaetze
+        )
 
         # -----------------------------
         # Sport
@@ -147,6 +157,10 @@ class ASVManager(ctk.CTk):
         self.add_menu_button("ℹ Info")
 
     def add_menu_group(self, title):
+
+        font=("Segoe UI", 14, "bold")
+        pady=(18, 6)
+         
 
         ctk.CTkLabel(
             self.sidebar,
@@ -395,7 +409,41 @@ class ASVManager(ctk.CTk):
             )
             return
 
-        DepartmentWindow(self, excel_datei)              
+        DepartmentWindow(self, excel_datei)    
+
+    def zeige_sportanlagen(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        FacilityWindow(
+            self,
+            excel_datei
+        )   
+
+    def zeige_plaetze(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        PlaceWindow(
+            self,
+            excel_datei
+        )               
 
     def start(self):
         self.status.insert(

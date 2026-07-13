@@ -30,3 +30,10 @@ class CalendarEntry(ctk.CTkFrame):
     def set(self, value):
         if value:
             self.date_entry.set_date(value)
+
+    def set_enabled(self, enabled=True):
+
+        if enabled:
+            self.date_entry.configure(state="normal")
+        else:
+            self.date_entry.configure(state="disabled")        

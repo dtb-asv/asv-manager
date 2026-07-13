@@ -6,9 +6,10 @@ from modules.constants import (
 )
 
 from modules.department_writer import DepartmentWriter
+from modules.base.service_base import ServiceBase
 
 
-class DepartmentService:
+class DepartmentService(ServiceBase):
 
     def __init__(self):
 
@@ -16,16 +17,12 @@ class DepartmentService:
 
     def load_departments(self, excel_datei):
 
-        df = pd.read_excel(
+        df = self.load_sheet(
             excel_datei,
-            sheet_name=SHEET_DEPARTMENTS
+            SHEET_DEPARTMENTS
         )
 
-        if df.empty:
-            return df
-
-        if "AKTIV" in df.columns:
-            df = df[df["AKTIV"] == "Ja"]
+        df = self.active_only(df)
 
         return df.sort_values("NAME")
 

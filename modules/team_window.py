@@ -6,6 +6,7 @@ from modules.member_service import MemberService
 from modules.lookup_service import LookupService
 from modules.team_assignment_service import TeamAssignmentService
 from modules.widgets.assignment_widget import AssignmentWidget
+from modules.department_service import DepartmentService
 
 
 class TeamWindow(ctk.CTkToplevel):
@@ -23,6 +24,20 @@ class TeamWindow(ctk.CTkToplevel):
         self.excel_datei = excel_datei
         self.on_saved = on_saved
         self.service = TeamService()
+        self.department_service = DepartmentService()
+
+        df = self.department_service.load_departments(excel_datei)
+
+        department_names = df["NAME"].tolist()
+
+        self.department_map = dict(
+            zip(
+                df["NAME"],
+                df["DEPARTMENT_ID"]
+            )
+        )
+
+
         self.member_service = MemberService()
         self.lookup_service = LookupService()
         self.assignment_service = TeamAssignmentService()
@@ -66,6 +81,25 @@ class TeamWindow(ctk.CTkToplevel):
             text="Mannschaft"
         ).pack(anchor="w", padx=20)
 
+        ctk.CTkLabel(
+            self.tab_allgemein,
+            text="Bereich"
+        ).pack(anchor="w", padx=20)
+
+        self.department = ctk.CTkComboBox(
+            self.tab_allgemein,
+            width=300,
+            values=department_names
+        )
+
+        self.department.pack(
+            padx=20,
+            pady=(0, 10)
+        )
+
+        if department_names:
+            self.department.set(department_names[0])
+        
         self.name = ctk.CTkEntry(
             self.tab_allgemein,
             width=300
@@ -99,40 +133,52 @@ class TeamWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             self.tab_allgemein,
-            text="Typ"
+            text="Altersklasse"
         ).pack(anchor="w", padx=20)
 
-        self.typ = ctk.CTkComboBox(
+        self.altersklasse = ctk.CTkComboBox(
             self.tab_allgemein,
             width=300,
             values=[
-                "Normal",
-                "Spielgemeinschaft",
-                "Mädchen",
-                "Fußballkindergarten"
+                "FK",
+                "U6",
+                "U7",
+                "U8",
+                "U9",
+                "U10",
+                "U11",
+                "U12",
+                "U13",
+                "U14",
+                "U15",
+                "U16",
+                "KM",
+                "Reserve",
+                "Frauen",
+                "Mädchen"
             ]
         )
 
-        self.typ.pack(
+        self.altersklasse.pack(
             padx=20,
             pady=(0, 20)
         )
 
-        self.typ.set("Normal")
+        self.altersklasse.set("FK")
 
         if self.team_data:
 
             self.name.insert(
                 0,
-                self.team_data.get("MANNSCHAFT", "")
+                self.team_data.get("NAME", "")
             )
 
             self.saison.set(
                 self.team_data.get("SAISON", "2026/2027")
             )
 
-            self.typ.set(
-                self.team_data.get("TYP", "Normal")
+            self.altersklasse.set(
+                self.team_data.get("ALTERSKLASSE", "Normal")
             )
         
         self.create_member_tab()
@@ -156,9 +202,12 @@ class TeamWindow(ctk.CTkToplevel):
             return
 
         daten = {
-            "MANNSCHAFT": name,
-            "SAISON": self.saison.get(),
-            "TYP": self.typ.get()
+            "NAME": name,
+            "ALTERSKLASSE": self.altersklasse.get(),
+            "DEPARTMENT_ID": self.department_map.get(
+                self.department.get(),
+                ""
+            )
         }
 
         if self.team_data:

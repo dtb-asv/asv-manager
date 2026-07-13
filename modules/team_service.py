@@ -1,6 +1,7 @@
 from openpyxl import load_workbook
 from modules.team_writer import TeamWriter
 from modules.history_service import HistoryService
+from modules.department_service import DepartmentService
 import pandas as pd
 
 from modules.constants import (
@@ -25,11 +26,10 @@ class TeamService:
             ws = wb.create_sheet(SHEET_TEAMS)
             ws.append([
                 "TEAM_ID",
-                "SAISON",
-                "MANNSCHAFT",
-                "TYP",
+                "NAME",
+                "ALTERSKLASSE",
+                "DEPARTMENT_ID",
                 "AKTIV",
-                "LEADVEREIN",
                 "BEMERKUNG"
             ])
 
@@ -109,7 +109,7 @@ class TeamService:
             daten
         )
 
-        objekt = daten.get("MANNSCHAFT", team_id)
+        objekt = daten.get("NAME", team_id)
 
         self.history.log(
             excel_datei=excel_datei,
@@ -141,5 +141,20 @@ class TeamService:
             bemerkung="Mannschaft wurde archiviert",
             benutzer="System"
         )
+
+    def load_teams_with_department_name(self, excel_datei):
+
+        teams = self.load_teams(excel_datei)
+        departments = DepartmentService().load_departments(excel_datei)
+
+        if teams.empty:
+            return teams
+
+        return teams.merge(
+            departments[["DEPARTMENT_ID", "NAME"]],
+            on="DEPARTMENT_ID",
+            how="left",
+            suffixes=("", "_DEPARTMENT")
+        )    
 
     

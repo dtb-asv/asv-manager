@@ -90,7 +90,9 @@ class TeamsWindow(ctk.CTkToplevel):
         self.selected_team = None
         self.selected_frame = None    
 
-        df = self.service.load_teams(self.excel_datei)
+        df = self.service.load_teams_with_department_name(
+            self.excel_datei
+        )
 
         df = df.dropna(how="all")
 
@@ -123,9 +125,9 @@ class TeamsWindow(ctk.CTkToplevel):
 
         columns = [
             "TEAM_ID",
-            "MANNSCHAFT",
-            "SAISON",
-            "TYP"
+            "NAME",
+            "ALTERSKLASSE",
+            "NAME_DEPARTMENT"
         ]
 
         header = ctk.CTkFrame(self.scroll)
@@ -215,7 +217,7 @@ class TeamsWindow(ctk.CTkToplevel):
 
         antwort = messagebox.askyesno(
             "Mannschaft archivieren",
-            f"Soll {self.selected_team['MANNSCHAFT']} archiviert werden?",
+            f"Soll {self.selected_team['NAME']} archiviert werden?",
             parent=self
         )
 
@@ -256,13 +258,13 @@ class TeamsWindow(ctk.CTkToplevel):
         df = self.df.copy()
 
         mask = (
-            df["MANNSCHAFT"].astype(str).str.lower().str.contains(text)
+            df["NAME"].astype(str).str.lower().str.contains(text)
             |
             df["TEAM_ID"].astype(str).str.lower().str.contains(text)
             |
-            df["SAISON"].astype(str).str.lower().str.contains(text)
+            df["ALTERSKLASSE"].astype(str).str.lower().str.contains(text)
             |
-            df["TYP"].astype(str).str.lower().str.contains(text)
+            df["NAME_DEPARTMENT"].astype(str).str.lower().str.contains(text)
         )
 
         self.draw_teams(df[mask])       
