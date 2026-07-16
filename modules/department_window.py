@@ -121,7 +121,10 @@ class DepartmentWindow(ListWindowBase):
 
     def bearbeiten_bereich(self):
 
-        if not hasattr(self, "selected_data") or self.selected_data is None:
+        selected = self.get_selected_data()
+
+        if selected is None:
+
             messagebox.showwarning(
                 "Kein Bereich",
                 "Bitte zuerst einen Bereich auswählen.",
@@ -129,11 +132,13 @@ class DepartmentWindow(ListWindowBase):
             )
             return
 
-        self.edit_department(self.selected_data)  
+        self.edit_department(selected) 
 
     def archivieren_bereich(self):
 
-        if not hasattr(self, "selected_data") or self.selected_data is None:
+        selected = self.get_selected_data()
+
+        if selected is None:
 
             messagebox.showwarning(
                 "Kein Bereich",
@@ -144,14 +149,14 @@ class DepartmentWindow(ListWindowBase):
 
         if not messagebox.askyesno(
             "Archivieren",
-            f"Soll der Bereich '{self.selected_data['NAME']}' archiviert werden?",
+            f"Soll der Bereich '{selected['NAME']}' archiviert werden?",
             parent=self
         ):
             return
 
         self.service.archive_department(
             self.excel_datei,
-            self.selected_data["DEPARTMENT_ID"]
+            selected["DEPARTMENT_ID"]
         )
 
         self.refresh()

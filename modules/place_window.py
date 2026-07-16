@@ -45,6 +45,7 @@ class PlaceWindow(ListWindowBase):
 
         self.load_data()
 
+        
     def load_data(self, suchtext=""):
 
         df = self.service.load_places_with_facility_name(
@@ -66,6 +67,7 @@ class PlaceWindow(ListWindowBase):
             "PLACE_ID",
             "NAME",
             "NAME_FACILITY",
+            "TRAININGSZONEN",
             "AKTIV"
         ]
 
@@ -80,6 +82,7 @@ class PlaceWindow(ListWindowBase):
                     row.get("PLACE_ID", ""),
                     row.get("NAME", ""),
                     row.get("NAME_FACILITY", ""),
+                    row.get("TRAININGSZONEN", ""),
                     row.get("AKTIV", "")
                 ],
                 row_data=row_data
@@ -124,20 +127,23 @@ class PlaceWindow(ListWindowBase):
 
     def bearbeiten_platz(self):
 
-        if not hasattr(self, "selected_data") or self.selected_data is None:
+        selected = self.get_selected_data()
+
+        if selected is None:
             messagebox.showwarning(
-                "Kein Bereich",
+                "Kein Platz",
                 "Bitte zuerst einen Platz auswählen.",
                 parent=self
             )
             return
 
-        self.edit_place(self.selected_data)  
+        self.edit_place(selected) 
 
     def archivieren_platz(self):
 
-        if not hasattr(self, "selected_data") or self.selected_data is None:
+        selected = self.get_selected_data()
 
+        if selected is None:
             messagebox.showwarning(
                 "Kein Platz",
                 "Bitte zuerst einen Platz auswählen.",
@@ -147,14 +153,14 @@ class PlaceWindow(ListWindowBase):
 
         if not messagebox.askyesno(
             "Archivieren",
-            f"Soll der Platz '{self.selected_data['NAME']}' archiviert werden?",
+            f"Soll der Platz '{selected['NAME']}' archiviert werden?",
             parent=self
         ):
             return
 
         self.service.archive_place(
             self.excel_datei,
-            self.selected_data["PLACE_ID"]
+            selected["PLACE_ID"]
         )
 
         self.refresh()
@@ -163,4 +169,4 @@ class PlaceWindow(ListWindowBase):
             "Archiviert",
             "Der Platz wurde archiviert.",
             parent=self
-        )      
+        )

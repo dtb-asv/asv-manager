@@ -18,20 +18,40 @@ class ListWindowBase(ctk.CTkToplevel):
 
         self.title(title)
         self.geometry("1000x650")
+        self.minsize(850, 550)
         self.grab_set()
 
-        ctk.CTkLabel(
+        # ESC schließt das Fenster
+        self.bind(
+            "<Escape>",
+            lambda event: self.destroy()
+        )
+
+        # Nur der Tabellenbereich darf mitwachsen
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(3, weight=1)
+
+        # =====================================
+        # Titel
+        # =====================================
+
+        self.title_label = ctk.CTkLabel(
             self,
             text=f"{icon} {title}",
             font=("Segoe UI", 26, "bold")
-        ).pack(pady=20)
-
-        self.toolbar = ctk.CTkFrame(
-            self,
-            fg_color="transparent"
         )
 
-        self.toolbar.pack(pady=5)
+        self.title_label.grid(
+            row=0,
+            column=0,
+            sticky="w",
+            padx=20,
+            pady=(20, 12)
+        )
+
+        # =====================================
+        # Suche
+        # =====================================
 
         self.search = SearchBar(
             self,
@@ -39,54 +59,91 @@ class ListWindowBase(ctk.CTkToplevel):
             placeholder=search_placeholder
         )
 
-        self.search.pack(
-            fill="x",
+        self.search.grid(
+            row=1,
+            column=0,
+            sticky="ew",
             padx=20,
-            pady=(5, 10)
+            pady=(0, 10)
         )
+
+        # =====================================
+        # Toolbar
+        # =====================================
 
         self.toolbar = ctk.CTkFrame(
             self,
             fg_color="transparent"
         )
 
-        self.toolbar.pack(
-            fill="x",
+        self.toolbar.grid(
+            row=2,
+            column=0,
+            sticky="ew",
             padx=20,
             pady=(0, 10)
         )
 
+        # =====================================
+        # Tabelle
+        # =====================================
+
         self.table = TableView(self)
 
+        # Übergangslösung für alten Code
         self.scroll = self.table
 
-        self.table.pack(
-            fill="both",
-            expand=True,
+        self.table.grid(
+            row=3,
+            column=0,
+            sticky="nsew",
             padx=20,
-            pady=10
+            pady=(0, 10)
+        )
+
+        # =====================================
+        # Footer
+        # =====================================
+
+        self.footer = ctk.CTkFrame(
+            self,
+            fg_color="transparent"
+        )
+
+        self.footer.grid(
+            row=4,
+            column=0,
+            sticky="ew",
+            padx=20,
+            pady=(0, 15)
         )
 
         self.status_label = ctk.CTkLabel(
-            self,
+            self.footer,
             text="",
             anchor="w"
         )
 
         self.status_label.pack(
+            side="left",
             fill="x",
-            padx=20,
-            pady=(0, 10)
+            expand=True
         )
 
-        ctk.CTkButton(
-            self,
+        self.close_button = ctk.CTkButton(
+            self.footer,
             text="❌ Schließen",
+            width=140,
             command=self.destroy
-        ).pack(pady=15)
+        )
+
+        self.close_button.pack(
+            side="right",
+            padx=(10, 0)
+        )
 
         self.selected_row = None
-
+        
     def add_toolbar_button(
         self,
         text,
@@ -113,67 +170,19 @@ class ListWindowBase(ctk.CTkToplevel):
 
     def create_header(self, columns):
 
-        header = ctk.CTkFrame(self.scroll)
-
-        header.pack(
-            fill="x",
-            pady=(0, 4)
-        )
-
-        for column in columns:
-
-            ctk.CTkLabel(
-                header,
-                text=column,
-                width=180,
-                anchor="w",
-                font=("Segoe UI", 13, "bold")
-            ).pack(
-                side="left",
-                padx=2
-            )
+        self.table.create_header(columns)
 
     def create_row(self, values, row_data=None):
 
-        row = ctk.CTkFrame(
-            self.scroll,
-            fg_color="transparent"
+        self.table.create_row(
+            values,
+            row_data=row_data
         )
 
-        row.pack(
-            fill="x",
-            pady=2
-        )
+    def get_selected_data(self):
 
-        if row_data is not None:
+        return self.table.selected_data    
 
-            row.bind(
-                "<Button-1>",
-                lambda event, f=row, r=row_data:
-                    self.select_row(f, r)
-            )
-
-        for value in values:
-
-            label = ctk.CTkLabel(
-                row,
-                text=str(value),
-                width=180,
-                anchor="w"
-            )
-
-            label.pack(
-                side="left",
-                padx=2
-            )
-
-            if row_data is not None:
-
-                label.bind(
-                    "<Button-1>",
-                    lambda event, f=row, r=row_data:
-                        self.select_row(f, r)
-                )
     def refresh(self):
 
         self.clear_scroll()
@@ -205,4 +214,5 @@ class ListWindowBase(ctk.CTkToplevel):
                 for col in columns
             ]
 
-            self.create_row(values)                                
+            self.create_row(values)   
+                                     

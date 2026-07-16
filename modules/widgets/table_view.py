@@ -9,6 +9,7 @@ class TableView(ctk.CTkScrollableFrame):
 
         self.selected_row = None
         self.selected_data = None
+        self.double_click_callback = None
 
     def clear(self):
 
@@ -17,6 +18,10 @@ class TableView(ctk.CTkScrollableFrame):
 
         for widget in self.winfo_children():
             widget.destroy()
+
+    def refresh(self):
+
+        self.clear()        
 
     def create_header(self, columns):
 
@@ -60,6 +65,12 @@ class TableView(ctk.CTkScrollableFrame):
                     self.select_row(f, r)
             )
 
+            row.bind(
+                "<Double-Button-1>",
+                lambda event, r=row_data:
+                    self.on_double_click(r)
+            )
+
         for value in values:
 
             label = ctk.CTkLabel(
@@ -81,6 +92,11 @@ class TableView(ctk.CTkScrollableFrame):
                     lambda event, f=row, r=row_data:
                         self.select_row(f, r)
                 )
+                label.bind(
+                    "<Double-Button-1>",
+                    lambda event, r=row_data:
+                        self.on_double_click(r)
+                )
 
     def select_row(self, frame, row_data):
 
@@ -95,4 +111,10 @@ class TableView(ctk.CTkScrollableFrame):
         )
 
         self.selected_row = frame
-        self.selected_data = row_data                            
+        self.selected_data = row_data     
+
+    def on_double_click(self, row_data):
+
+        if self.double_click_callback:
+
+            self.double_click_callback(row_data)                           

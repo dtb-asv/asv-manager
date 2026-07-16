@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from modules.widgets.table_view import TableView
 
 
 class SelectionDialog(ctk.CTkToplevel):
@@ -34,29 +35,68 @@ class SelectionDialog(ctk.CTkToplevel):
             padx=20
         )
 
-        self.listbox = ctk.CTkTextbox(
-            self,
-            height=400
-        )
+        self.table = TableView(self)
 
-        self.listbox.pack(
+        self.table.pack(
             fill="both",
             expand=True,
             padx=20,
             pady=15
         )
 
-        for value in values:
+        self.table.create_header([
+            "Auswahl"
+        ])
 
-            self.listbox.insert(
-                "end",
-                value + "\n"
+        for item in values:
+
+            self.table.create_row(
+                [
+                    item["TEXT"]
+                ],
+                row_data=item
             )
 
-        ctk.CTkButton(
+        button_frame = ctk.CTkFrame(
             self,
-            text="Schließen",
+            fg_color="transparent"
+        )
+
+        button_frame.pack(
+            fill="x",
+            padx=20,
+            pady=(0, 15)
+        )
+
+        ctk.CTkButton(
+            button_frame,
+            text="Abbrechen",
             command=self.destroy
         ).pack(
-            pady=10
+            side="left"
         )
+
+        ctk.CTkButton(
+            button_frame,
+            text="Übernehmen",
+            command=self.uebernehmen
+        ).pack(
+            side="right"
+        )
+
+    def uebernehmen(self):
+
+        selected = self.table.selected_data
+
+        if selected is None:
+            return
+
+        self.result = selected
+
+        self.destroy()
+
+    def show(self):
+
+        self.wait_window()
+
+        return self.result       

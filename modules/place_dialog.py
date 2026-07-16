@@ -27,7 +27,7 @@ class PlaceDialog(ctk.CTkToplevel):
         self.result = None
 
         self.title(title)
-        self.geometry("420x220")
+        self.geometry("420x310")
         self.resizable(False, False)
         self.grab_set()
 
@@ -73,11 +73,63 @@ class PlaceDialog(ctk.CTkToplevel):
         if facility_names:
             self.facility_combo.set(facility_names[0])
 
+        ctk.CTkLabel(
+            self,
+            text="Trainingszonen",
+            font=("Segoe UI", 13, "bold")
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(15, 5)
+        )
+
+        self.training_zones_combo = ctk.CTkComboBox(
+            self,
+            values=[
+                "1",
+                "2",
+                "4"
+            ]
+        )
+
+        self.training_zones_combo.pack(
+            padx=20,
+            fill="x"
+        )
+
+        self.training_zones_combo.set("1")    
+
         if daten:
+
             self.name_entry.insert(
                 0,
                 daten.get("NAME", "")
             )
+
+            training_zones = daten.get(
+                "TRAININGSZONEN",
+                1
+            )
+
+            if str(training_zones).lower() == "nan":
+                training_zones = 1
+
+            self.training_zones_combo.set(
+                str(int(float(training_zones)))
+            )
+
+            facility_id = daten.get(
+                "FACILITY_ID",
+                ""
+            )
+
+            for facility_name, mapped_id in self.facility_map.items():
+
+                if str(mapped_id) == str(facility_id):
+                    self.facility_combo.set(
+                        facility_name
+                    )
+                    break
 
         button_frame = ctk.CTkFrame(
             self,
@@ -116,7 +168,13 @@ class PlaceDialog(ctk.CTkToplevel):
 
         self.result = {
             "NAME": name,
-            "FACILITY_ID": self.facility_map.get(facility_name, "")
+            "FACILITY_ID": self.facility_map.get(
+                facility_name,
+                ""
+            ),
+            "TRAININGSZONEN": int(
+                self.training_zones_combo.get()
+            )
         }
 
         self.destroy()    

@@ -24,6 +24,7 @@ from modules.trainings_window import TrainingsWindow
 from modules.department_window import DepartmentWindow
 from modules.facility_window import FacilityWindow
 from modules.place_window import PlaceWindow
+from modules.training_plan_window import TrainingPlanWindow
 
 
 ctk.set_appearance_mode("dark")
@@ -122,6 +123,11 @@ class ASVManager(ctk.CTk):
         self.add_menu_button(
             "👥 Mitglieder",
             self.zeige_mitglieder
+        )
+
+        self.add_menu_button(
+            "📆 Trainingsplan",
+            self.zeige_trainingsplan
         )
 
         self.add_menu_button(
@@ -395,7 +401,24 @@ class ASVManager(ctk.CTk):
             )
             return
 
-        TrainingsWindow(self, excel_datei)      
+        TrainingsWindow(self, excel_datei)    
+
+    def zeige_trainingsplan(self):
+
+        excel_datei = self.excel_entry.get()
+
+        if not excel_datei:
+            messagebox.showwarning(
+                "Saison fehlt",
+                "Bitte zuerst eine Saison öffnen.",
+                parent=self
+            )
+            return
+
+        TrainingPlanWindow(
+            self,
+            excel_datei
+        )   
 
     def zeige_bereiche(self):
 
