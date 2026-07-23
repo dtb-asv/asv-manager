@@ -2,6 +2,7 @@ from openpyxl import load_workbook
 from modules.team_writer import TeamWriter
 from modules.history_service import HistoryService
 from modules.department_service import DepartmentService
+from modules.repositories.team_repository import TeamRepository
 import pandas as pd
 
 from modules.constants import (
@@ -15,6 +16,7 @@ class TeamService:
 
     def __init__(self):
 
+        self.repository = TeamRepository()
         self.writer = TeamWriter() 
         self.history = HistoryService()
 
@@ -155,6 +157,37 @@ class TeamService:
             on="DEPARTMENT_ID",
             how="left",
             suffixes=("", "_DEPARTMENT")
-        )    
+        )  
+
+    def get_active(self):
+        return self.repository.get_active()    
+
+    def get_all(self):
+        return self.repository.get_all()
+
+
+    def count(self):
+        return self.repository.count()
+
+
+    def create_team(self, name, season_id, active=True):
+        return self.repository.save(
+            name=name,
+            season_id=season_id,
+            active=active
+        )
+
+
+    def update_team_db(self, team_id, name, season_id, active=True):
+        return self.repository.update(
+            team_id=team_id,
+            name=name,
+            season_id=season_id,
+            active=active
+        )
+
+
+    def archive_team_db(self, team_id):
+        return self.repository.archive(team_id)      
 
     

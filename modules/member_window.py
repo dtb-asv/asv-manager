@@ -31,7 +31,8 @@ class MemberWindow(EditWindowBase):
         else:
             self.set_save_text("Speichern")
 
-        self.excel_datei = parent.excel_datei
+        # Umstellung auf Postgres
+        # self.excel_datei = parent.excel_datei
         self.service = MemberService()
         self.member_role_service = MemberRoleService()
         self.lookup_service = LookupService()
@@ -51,7 +52,7 @@ class MemberWindow(EditWindowBase):
 
         if self.member_data:
             self.show_id(
-                self.member_data["MEMBER_ID"]
+                self.member_data["PERSON_ID"]
             )
 
         self.tabs = ctk.CTkTabview(self)
@@ -213,8 +214,8 @@ class MemberWindow(EditWindowBase):
         if self.member_data:
             self.fill_data()
 
-        self.create_role_checkboxes()    
-        self.load_existing_roles()
+        #self.create_role_checkboxes()    
+        #self.load_existing_roles()
 
     def speichern(self):
 
@@ -233,55 +234,44 @@ class MemberWindow(EditWindowBase):
             return
 
         daten = {
-            "VORNAME": self.vorname.get().strip(),
-            "NACHNAME": self.nachname.get().strip(),
-            "GEBURTSDATUM": self.geburtsdatum.get(),
-            "GESCHLECHT": self.geschlecht.get(),
-            "MOBIL": self.mobil.get().strip(),
-            "EINTRITT": self.eintritt.get(),
-            "AUSTRITT": self.austritt.get(),
-            "SPIELERPASSNUMMER": self.spielerpassnummer.get().strip(),
-            "EMAIL": self.email.get().strip()
+            "external_member_id": self.member_data["MEMBER_ID"] if self.member_data else None,
+            "first_name": self.vorname.get().strip(),
+            "last_name": self.nachname.get().strip(),
+            "birth_date": self.geburtsdatum.get(),
+            "gender": self.geschlecht.get(),
+            "mobile": self.mobil.get().strip(),
+            "email": self.email.get().strip(),
+            "player_pass_number": self.spielerpassnummer.get().strip(),
+            "entry_date": self.eintritt.get(),
+            "exit_date": self.austritt.get(),
+            "status": (
+                self.member_data.get("STATUS", "Aktiv")
+                if self.member_data
+                else "Aktiv"
+            ),
+            "note": (
+                self.member_data.get("BEMERKUNG", "")
+                if self.member_data
+                else ""
+            ),
+            "active": (
+                self.member_data.get("AKTIV", True)
+                if self.member_data
+                else True
+            ),
         }
-
+         
         if self.member_data:
 
-            dialog = ChangeReasonDialog(
-                self,
-                title="Mitglied ändern"
-            )
-
-            self.wait_window(dialog)
-
-            if dialog.result is None:
-                return
-
-            daten["_GRUND"] = dialog.result["grund"]
-            daten["_BEMERKUNG"] = dialog.result["bemerkung"]
-
             self.service.update_member(
-                self.excel_datei,
-                self.member_data["MEMBER_ID"],
+                self.member_data["PERSON_ID"],
                 daten
             )
 
-            self.member_role_service.save_roles(
-                self.excel_datei,
-                self.member_data["MEMBER_ID"],
-                self.get_selected_role_codes()
-            )
         else:
-            member_id = self.service.add_member(
-                self.excel_datei,
-                daten
-            )
 
-            self.member_role_service.save_roles(
-                self.excel_datei,
-                member_id,
-                self.get_selected_role_codes()
-            )
-
+            self.service.create_member(daten)
+             
         if self.on_saved:
             self.on_saved()
 

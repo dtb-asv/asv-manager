@@ -3,6 +3,7 @@ from modules.team_service import TeamService
 from modules.place_service import PlaceService
 from modules.training_schedule_service import TrainingScheduleService
 from modules.widgets.warning_dialog import WarningDialog
+from modules.widgets.date_picker import DatePicker
 
 
 class TrainingScheduleWindow(ctk.CTkToplevel):
@@ -225,9 +226,33 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
 
         ctk.CTkLabel(
             self.content_frame,
-            text="Wochentag"
+            text="Gültig ab"
         ).grid(
             row=8,
+            column=0,
+            sticky="w",
+            padx=20,
+            pady=(5, 5)
+        )
+
+        self.gueltig_ab_picker = DatePicker(
+            self.content_frame,
+            width=400
+        )
+
+        self.gueltig_ab_picker.grid(
+            row=9,
+            column=0,
+            sticky="ew",
+            padx=20,
+            pady=(0, 15)
+        )
+
+        ctk.CTkLabel(
+            self.content_frame,
+            text="Wochentag"
+        ).grid(
+            row=10,
             column=0,
             sticky="w",
             padx=20,
@@ -241,7 +266,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
         )
 
         self.weekday_combo.grid(
-            row=9,
+            row=11,
             column=0,
             sticky="ew",
             padx=20,
@@ -256,7 +281,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
         )
 
         time_frame.grid(
-            row=10,
+            row=12,
             column=0,
             sticky="ew",
             padx=20,
@@ -316,7 +341,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
             self.content_frame,
             text="Trainingsart"
         ).grid(
-            row=11,
+            row=13,
             column=0,
             sticky="w",
             padx=20,
@@ -330,7 +355,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
         )
 
         self.training_type_combo.grid(
-            row=12,
+            row=14,
             column=0,
             sticky="ew",
             padx=20,
@@ -343,7 +368,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
             self.content_frame,
             text="Bemerkung"
         ).grid(
-            row=13,
+            row=15,
             column=0,
             sticky="w",
             padx=20,
@@ -356,7 +381,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
         )
 
         self.remark_textbox.grid(
-            row=14,
+            row=16,
             column=0,
             sticky="ew",
             padx=20,
@@ -429,6 +454,16 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
                 )
             ).strip()
         )
+
+        gueltig_ab = str(
+            self.schedule_data.get(
+                "GUELTIG_AB",
+                ""
+            )
+        ).strip()
+
+        if gueltig_ab:
+            self.gueltig_ab_picker.set_date(gueltig_ab)
 
         self.weekday_combo.set(
             str(
@@ -661,6 +696,7 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
                 ""
             ),
             "SAISON": self.saison_combo.get().strip(),
+            "GUELTIG_AB": self.gueltig_ab_picker.get_date(),
             "WOCHENTAG": self.weekday_combo.get().strip(),
             "BEGINN": self.start_entry.get().strip(),
             "ENDE": self.end_entry.get().strip(),
@@ -709,11 +745,6 @@ class TrainingScheduleWindow(ctk.CTkToplevel):
 
                 if not confirmed:
                     return
-
-            self.service.save_schedule(
-                self.excel_datei,
-                daten
-            )
 
             self.service.save_schedule(
                 self.excel_datei,

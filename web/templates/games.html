@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Spiele</title>
+
+    <style>
+
+        body{
+            font-family:Arial;
+            margin:30px;
+            background:#f4f4f4;
+        }
+
+        table{
+
+            width:100%;
+            border-collapse:collapse;
+            background:white;
+
+        }
+
+        th{
+
+            background:black;
+            color:white;
+            padding:10px;
+
+        }
+
+        td{
+
+            padding:8px;
+            border-bottom:1px solid #ddd;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h2>Spiele</h2>
+
+<table>
+
+<tr>
+
+<th>Datum</th>
+<th>Zeit</th>
+<th>Mannschaft</th>
+<th>Gegner</th>
+<th>Ort</th>
+<th>Heim/Auswärts</th>
+
+</tr>
+
+{% for game in games %}
+
+<tr>
+
+<td>{{ game.game_date }}</td>
+<td>{{ game.start_time }}</td>
+<td>{{ game.team_name }}</td>
+<td>{{ game.opponent }}</td>
+<td>{{ game.place_name }}</td>
+<td>{{ game.home_away }}</td>
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</body>
+</html>

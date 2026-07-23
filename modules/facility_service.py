@@ -1,88 +1,58 @@
-import pandas as pd
-
-from modules.constants import (
-    SHEET_FACILITIES,
-    PREFIX_FACILITY
-)
-from modules.facility_writer import FacilityWriter
+from modules.repositories.facility_repository import FacilityRepository
 
 
 class FacilityService:
 
     def __init__(self):
 
-        self.writer = FacilityWriter()
+        self.repository = FacilityRepository()
 
-    def load_facilities(self, excel_datei):
+    def get_all(self):
 
-        df = pd.read_excel(
-            excel_datei,
-            sheet_name=SHEET_FACILITIES
-        )
+        return self.repository.get_all()
 
-        if df.empty:
-            return df
+    def get_active(self):
 
-        if "AKTIV" in df.columns:
-            df = df[df["AKTIV"] == "Ja"]
+        return self.repository.get_active()
 
-        return df.sort_values("NAME")
+    def get_by_id(self, facility_id):
 
-    def next_facility_id(self, excel_datei):
+        return self.repository.get_by_id(facility_id)
 
-        df = self.load_facilities(excel_datei)
+    def save_facility(self, daten):
 
-        if df.empty:
-            return f"{PREFIX_FACILITY}000001"
+        facility = {
 
-        nummern = []
+            "facility_id": daten.get(
+                "facility_id",
+                daten.get("FACILITY_ID")
+            ),
 
-        for facility_id in df["FACILITY_ID"]:
+            "name": daten.get(
+                "name",
+                daten.get("NAME", "")
+            ),
 
-            try:
-                nummern.append(
-                    int(
-                        str(facility_id).replace(
-                            PREFIX_FACILITY,
-                            ""
-                        )
-                    )
-                )
-            except Exception:
-                pass
+            "address": daten.get(
+                "address",
+                daten.get("ADDRESS", "")
+            ),
 
-        return f"{PREFIX_FACILITY}{max(nummern)+1:06d}"
+            "active": daten.get(
+                "active",
+                daten.get("AKTIV", True)
+            )
+        }
 
-    def save_facility(self, excel_datei, daten):
+        if isinstance(facility["active"], str):
 
-        if not daten.get("FACILITY_ID"):
-
-            daten["FACILITY_ID"] = self.next_facility_id(
-                excel_datei
+            facility["active"] = (
+                facility["active"].strip().lower()
+                in ("ja", "true", "1", "aktiv")
             )
 
-            daten["AKTIV"] = "Ja"
+        return self.repository.save(facility)
 
-            return self.writer.add_facility(
-                excel_datei,
-                daten
-            )
+    def archive_facility(self, facility_id):
 
-        self.writer.update_facility(
-            excel_datei,
-            daten["FACILITY_ID"],
-            daten
-        )
-
-        return daten["FACILITY_ID"]
-
-    def archive_facility(
-        self,
-        excel_datei,
-        facility_id
-    ):
-
-        self.writer.archive_facility(
-            excel_datei,
-            facility_id
-        )
+        self.repository.archive(facility_id)

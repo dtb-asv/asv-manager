@@ -6,6 +6,7 @@ from modules.constants import SHEET_TEAM_MEMBERS
 from modules.constants import SHEET_MEMBERS
 from modules.constants import SHEET_MEMBER_ROLES
 from modules.team_member_writer import TeamMemberWriter
+from modules.repositories.team_member_repository import TeamMemberRepository
 
 
 class TeamMemberService(ServiceBase):
@@ -14,6 +15,7 @@ class TeamMemberService(ServiceBase):
 
         super().__init__()
 
+        self.repository = TeamMemberRepository()
         self.writer = TeamMemberWriter()
 
     def load_assignments(self, excel_datei, team_id):
@@ -381,4 +383,44 @@ class TeamMemberService(ServiceBase):
 
         return result.sort_values(
             ["ROLLE", "NACHNAME", "VORNAME"]
+        )   
+
+    def get_all_players_db(self):
+        return self.repository.get_all_players()
+
+
+    def get_team_players_db(self, team_id):
+        return self.repository.get_team_players(team_id)
+
+
+    def assign_player_db(self, team_id, person_id):
+        return self.repository.assign_player(
+            team_id,
+            person_id
+        )
+
+
+    def remove_player_db(self, team_member_id):
+        return self.repository.remove_player(
+            team_member_id
+        )     
+
+    def get_all_staff_db(self):
+        return self.repository.get_all_staff()
+
+
+    def get_team_staff_db(self, team_id):
+        return self.repository.get_team_staff(team_id)
+
+
+    def assign_staff_db(self, team_id, person_id):
+        return self.repository.assign_staff(
+            team_id,
+            person_id
+        )
+
+
+    def remove_staff_db(self, team_member_id):
+        return self.repository.remove_staff(
+            team_member_id
         )    

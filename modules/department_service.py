@@ -1,86 +1,44 @@
-import pandas as pd
-
-from modules.constants import (
-    SHEET_DEPARTMENTS,
-    PREFIX_DEPARTMENT
-)
-
-from modules.department_writer import DepartmentWriter
-from modules.base.service_base import ServiceBase
+from modules.repositories.department_repository import DepartmentRepository
 
 
-class DepartmentService(ServiceBase):
+class DepartmentService:
 
     def __init__(self):
+        self.repository = DepartmentRepository()
 
-        self.writer = DepartmentWriter()
+    def get_all(self):
+        return self.repository.get_all()
 
-    def load_departments(self, excel_datei):
+    def get_active(self):
+        return self.repository.get_active()
 
-        df = self.load_sheet(
-            excel_datei,
-            SHEET_DEPARTMENTS
-        )
+    def get_by_id(self, department_id):
+        return self.repository.get_by_id(department_id)
 
-        df = self.active_only(df)
+    def save_department(self, daten):
 
-        return df.sort_values("NAME")
+        department = {
+            "department_id": daten.get(
+                "department_id",
+                daten.get("DEPARTMENT_ID")
+            ),
+            "name": daten.get(
+                "name",
+                daten.get("NAME", "")
+            ),
+            "active": daten.get(
+                "active",
+                daten.get("AKTIV", True)
+            ),
+        }
 
-    def next_department_id(self, excel_datei):
-
-        df = self.load_departments(excel_datei)
-
-        if df.empty:
-            return f"{PREFIX_DEPARTMENT}000001"
-
-        nummern = []
-
-        for department_id in df["DEPARTMENT_ID"]:
-
-            try:
-                nummern.append(
-                    int(
-                        str(department_id).replace(
-                            PREFIX_DEPARTMENT,
-                            ""
-                        )
-                    )
-                )
-            except Exception:
-                pass
-
-        return f"{PREFIX_DEPARTMENT}{max(nummern)+1:06d}"
-
-    def save_department(self, excel_datei, daten):
-
-        if not daten.get("DEPARTMENT_ID"):
-
-            daten["DEPARTMENT_ID"] = self.next_department_id(
-                excel_datei
+        if isinstance(department["active"], str):
+            department["active"] = (
+                department["active"].strip().lower()
+                in ("ja", "true", "1", "aktiv")
             )
 
-            daten["AKTIV"] = "Ja"
+        return self.repository.save(department)
 
-            return self.writer.add_department(
-                excel_datei,
-                daten
-            )
-
-        self.writer.update_department(
-            excel_datei,
-            daten["DEPARTMENT_ID"],
-            daten
-        )
-
-        return daten["DEPARTMENT_ID"]
-
-    def archive_department(
-        self,
-        excel_datei,
-        department_id
-    ):
-
-        self.writer.archive_department(
-            excel_datei,
-            department_id
-        )
+    def archive_department(self, department_id):
+        self.repository.archive(department_id)

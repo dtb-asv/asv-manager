@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import pandas as pd
 
 from modules.member_service import MemberService
 from modules.member_window import MemberWindow
@@ -9,10 +10,9 @@ from modules.widgets.list_toolbar import ListToolbar
 
 class MembersWindow(ctk.CTkToplevel):
 
-    def __init__(self, parent, excel_datei):
+    def __init__(self, parent):
         super().__init__(parent)
 
-        self.excel_datei = excel_datei
         self.service = MemberService()
         self.selected_member = None
         self.selected_frame = None
@@ -83,18 +83,25 @@ class MembersWindow(ctk.CTkToplevel):
             widget.destroy()
 
         self.selected_member = None
-        self.selected_frame = None    
+        self.selected_frame = None
 
-        df = self.service.load_members(self.excel_datei)
-        self.df = df.copy()
-        df = df.dropna(how="all")
+        members = self.service.get_all()
 
-        if "STATUS" in df.columns:
-            df = df[
-                df["STATUS"].astype(str).str.lower() != "archiviert"
-            ]
+        rows = []
 
-        self.draw_members(df)
+        for member in members:
+            rows.append({
+                "MEMBER_ID": member["external_member_id"],
+                "VORNAME": member["first_name"],
+                "NACHNAME": member["last_name"],
+                "GEBURTSDATUM": member["birth_date"],
+                "STATUS": "Aktiv",
+                "PERSON_ID": member["person_id"],
+            })
+
+        self.df = pd.DataFrame(rows)
+
+        self.draw_members(self.df)
 
     def draw_members(self, df):
 
@@ -214,35 +221,46 @@ class MembersWindow(ctk.CTkToplevel):
             return
 
         self.service.archive_member(
-            self.excel_datei,
-            self.selected_member["MEMBER_ID"]
+            self.selected_member["PERSON_ID"]
         )
 
-        self.load_members()       
+        self.load_members()
 
     def filter_members(self, text):
 
         text = text.strip().lower()
 
-        if text == "":
-            self.load_members()
-            return
+        # Aktuelle Anzeige leeren
+        for widget in self.scroll.winfo_children():
+            widget.destroy()
+
+        self.selected_member = None
+        self.selected_frame = None
 
         df = self.df.copy()
 
-        df = df.dropna(how="all")
-
-        if "STATUS" in df.columns:
-            df = df[
-                df["STATUS"].astype(str).str.lower() != "archiviert"
-            ]
+        if text == "":
+            self.draw_members(df)
+            return
 
         mask = (
-            df["VORNAME"].astype(str).str.lower().str.contains(text)
+            df["VORNAME"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+            .str.contains(text, regex=False)
             |
-            df["NACHNAME"].astype(str).str.lower().str.contains(text)
+            df["NACHNAME"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+            .str.contains(text, regex=False)
             |
-            df["MEMBER_ID"].astype(str).str.lower().str.contains(text)
+            df["MEMBER_ID"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+            .str.contains(text, regex=False)
         )
 
-        self.draw_members(df[mask])          
+        self.draw_members(df[mask])

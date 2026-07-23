@@ -10,7 +10,7 @@ class FacilityDialog(ctk.CTkToplevel):
         self.result = None
 
         self.title(title)
-        self.geometry("420x220")
+        self.geometry("420x300")
         self.resizable(False, False)
         self.grab_set()
 
@@ -32,11 +32,42 @@ class FacilityDialog(ctk.CTkToplevel):
             padx=20,
             fill="x"
         )
+        ctk.CTkLabel(
+            self,
+            text="Adresse",
+            font=("Segoe UI", 13, "bold")
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(15, 5)
+        )
+
+        self.address_entry = ctk.CTkEntry(
+            self,
+            width=360
+        )
+
+        self.address_entry.pack(
+            padx=20,
+            fill="x"
+        )
 
         if daten:
+
             self.name_entry.insert(
                 0,
-                daten.get("NAME", "")
+                daten.get(
+                    "name",
+                    daten.get("NAME", "")
+                )
+            )
+
+            self.address_entry.insert(
+                0,
+                daten.get(
+                    "address",
+                    daten.get("ADDRESS", "")
+                )
             )
 
         button_frame = ctk.CTkFrame(
@@ -73,7 +104,8 @@ class FacilityDialog(ctk.CTkToplevel):
             return
 
         self.result = {
-            "NAME": name
+            "name": name,
+            "address": self.address_entry.get().strip()
         }
 
         self.destroy()    

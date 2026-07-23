@@ -9,14 +9,13 @@ from modules.widgets.search_bar import SearchBar
 
 class TeamsWindow(ctk.CTkToplevel):
 
-    def __init__(self, parent, excel_datei):
+    def __init__(self, parent):
         super().__init__(parent)
 
-        self.excel_datei = excel_datei
         self.service = TeamService()
         self.selected_team = None
         self.selected_frame = None
-
+       
         self.title("Mannschaften")
         self.geometry("1000x650")
         self.grab_set()
@@ -88,20 +87,27 @@ class TeamsWindow(ctk.CTkToplevel):
             widget.destroy()
 
         self.selected_team = None
-        self.selected_frame = None    
+        self.selected_frame = None
 
-        df = self.service.load_teams_with_department_name(
-            self.excel_datei
-        )
+        teams = self.service.get_active()
 
-        df = df.dropna(how="all")
+        import pandas as pd
 
-        if "AKTIV" in df.columns:
-            df = df[
-                df["AKTIV"].astype(str).str.lower() == "ja"
-            ]
+        rows = []
 
-        if df.empty:
+        for team in teams:
+            rows.append({
+                "TEAM_ID": team["team_id"],
+                "NAME": team["name"],
+                "ALTERSKLASSE": "",
+                "NAME_DEPARTMENT": "",
+                "SEASON_ID": team["season_id"],
+                "ACTIVE": team["active"],
+            })
+
+        self.df = pd.DataFrame(rows)
+
+        if self.df.empty:
 
             ctk.CTkLabel(
                 self.scroll,
@@ -111,9 +117,7 @@ class TeamsWindow(ctk.CTkToplevel):
 
             return
 
-        self.df = df.copy()
-
-        self.draw_teams(df)    
+        self.draw_teams(self.df)
                         
     def draw_teams(self, df):  
 
@@ -182,9 +186,8 @@ class TeamsWindow(ctk.CTkToplevel):
 
     def neue_mannschaft(self):
 
-        TeamWindow(
+       TeamWindow(
             self,
-            self.excel_datei,
             on_saved=self.load_teams
         )
 
@@ -200,7 +203,6 @@ class TeamsWindow(ctk.CTkToplevel):
 
         TeamWindow(
             self,
-            self.excel_datei,
             on_saved=self.load_teams,
             team_data=self.selected_team
         )

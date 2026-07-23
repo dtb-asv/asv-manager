@@ -11,6 +11,7 @@ from modules.widgets.table_view import TableView
 from modules.widgets.selection_dialog import SelectionDialog
 from modules.team_member_service import TeamMemberService
 from modules.member_window import MemberWindow
+from modules.season_service import SeasonService
 
 
 class TeamWindow(ctk.CTkToplevel):
@@ -18,28 +19,40 @@ class TeamWindow(ctk.CTkToplevel):
     def __init__(
         self,
         parent,
-        excel_datei,
         on_saved=None,
         team_data=None
     ):
 
         super().__init__(parent)
 
-        self.excel_datei = excel_datei
         self.on_saved = on_saved
         self.service = TeamService()
         self.department_service = DepartmentService()
+        self.season_service = SeasonService()
 
-        df = self.department_service.load_departments(excel_datei)
+        seasons = self.season_service.get_active()
 
-        department_names = df["NAME"].tolist()
+        season_names = [
+            season["name"]
+            for season in seasons
+        ]
 
-        self.department_map = dict(
-            zip(
-                df["NAME"],
-                df["DEPARTMENT_ID"]
-            )
-        )
+        self.season_map = {
+            season["name"]: season["season_id"]
+            for season in seasons
+        }
+
+        departments = self.department_service.get_active()
+
+        department_names = [
+            department["name"]
+            for department in departments
+        ]
+
+        self.department_map = {
+            department["name"]: department["department_id"]
+            for department in departments
+        }
 
 
         self.member_service = MemberService()
@@ -134,18 +147,16 @@ class TeamWindow(ctk.CTkToplevel):
         self.saison = ctk.CTkComboBox(
             self.tab_allgemein,
             width=300,
-            values=[
-                "2025/2026",
-                "2026/2027",
-                "2027/2028"
-            ]
+            values=season_names
         )
+
         self.saison.pack(
             padx=20,
             pady=(0, 10)
         )
 
-        self.saison.set("2026/2027")
+        if season_names:
+            self.saison.set(season_names[0])
 
         ctk.CTkLabel(
             self.tab_allgemein,
@@ -256,38 +267,33 @@ class TeamWindow(ctk.CTkToplevel):
             )
         }
 
+        season_name = self.saison.get().strip()
+
+        season_id = self.season_map.get(season_name)
+
+        if season_id is None:
+            messagebox.showwarning(
+                "Fehlende Saison",
+                "Bitte eine gültige Saison auswählen.",
+                parent=self
+            )
+            return
+
         if self.team_data:
 
-            dialog = ChangeReasonDialog(
-                self,
-                title="Mannschaft ändern"
-            )
-
-            self.wait_window(dialog)
-
-            if dialog.result is None:
-                return
-
-            daten["_GRUND"] = dialog.result["grund"]
-            daten["_BEMERKUNG"] = dialog.result["bemerkung"]
-
-            self.service.update_team(
-                self.excel_datei,
-                self.team_data["TEAM_ID"],
-                daten
-            )
-
-            self.assignment_service.save_assignments(
-                self.excel_datei,
-                self.team_data["TEAM_ID"],
-                self.get_selected_assignments()
+            self.service.update_team_db(
+                team_id=self.team_data["TEAM_ID"],
+                name=name,
+                season_id=season_id,
+                active=True
             )
 
         else:
 
-            self.service.add_team(
-                self.excel_datei,
-                daten
+            self.service.create_team(
+                name=name,
+                season_id=season_id,
+                active=True
             )
 
         if self.on_saved:
@@ -479,16 +485,17 @@ class TeamWindow(ctk.CTkToplevel):
 
         service = TeamMemberService()
 
-        df = service.get_all_players(
-            self.excel_datei
-        )
+        players = service.get_all_players_db()
 
         values = [
             {
-                "MEMBER_ID": row["MEMBER_ID"],
-                "TEXT": f"{row['VORNAME']} {row['NACHNAME']}"
+                "MEMBER_ID": player["MEMBER_ID"],
+                "TEXT": (
+                    f"{player['VORNAME']} "
+                    f"{player['NACHNAME']}"
+                ).strip()
             }
-            for _, row in df.iterrows()
+            for player in players
         ]
 
         dialog = SelectionDialog(
@@ -509,8 +516,7 @@ class TeamWindow(ctk.CTkToplevel):
                 )
                 return
 
-            success = service.assign_player(
-                self.excel_datei,
+            success = service.assign_player_db(
                 self.team_data["TEAM_ID"],
                 result["MEMBER_ID"]
             )
@@ -546,12 +552,11 @@ class TeamWindow(ctk.CTkToplevel):
 
         service = TeamMemberService()
 
-        df = service.get_team_players(
-            self.excel_datei,
+        players = service.get_team_players_db(
             self.team_data["TEAM_ID"]
         )
 
-        count = len(df)
+        count = len(players)
 
         if count == 0:
 
@@ -571,15 +576,15 @@ class TeamWindow(ctk.CTkToplevel):
                 text=f"{count} Spieler"
             )
 
-        for _, row in df.iterrows():
+        for player in players:
 
             self.player_table.create_row(
                 [
-                    row["VORNAME"],
-                    row["NACHNAME"]
+                    player["VORNAME"],
+                    player["NACHNAME"]
                 ],
-                row_data=row.to_dict()
-            )  
+                row_data=dict(player)
+            ) 
 
     def remove_player(self):
 
@@ -605,8 +610,7 @@ class TeamWindow(ctk.CTkToplevel):
 
         service = TeamMemberService()
 
-        success = service.remove_player(
-            self.excel_datei,
+        success = service.remove_player_db(
             selected["TEAM_MEMBER_ID"]
         )
 
@@ -622,11 +626,77 @@ class TeamWindow(ctk.CTkToplevel):
 
     def open_player(self, player_data):
 
+        person_id = player_data.get(
+            "PERSON_ID",
+            player_data.get("MEMBER_ID")
+        )
+
+        if not person_id:
+
+            messagebox.showerror(
+                "Person fehlt",
+                "Die Person konnte nicht eindeutig ermittelt werden.",
+                parent=self
+            )
+
+            return
+
+        service = MemberService()
+
+        member_data = service.get_by_id(person_id)
+
+        if member_data is None:
+
+            messagebox.showerror(
+                "Person nicht gefunden",
+                "Die Person wurde in der Datenbank nicht gefunden.",
+                parent=self
+            )
+
+            return
+
         MemberWindow(
             self,
             on_saved=self.load_team_players,
-            member_data=player_data
-        ) 
+            member_data=member_data
+        )
+
+    def open_trainer(self, trainer_data):
+
+        person_id = trainer_data.get(
+            "PERSON_ID",
+            trainer_data.get("MEMBER_ID")
+        )
+
+        if not person_id:
+
+            messagebox.showerror(
+                "Person fehlt",
+                "Der Trainer konnte nicht eindeutig ermittelt werden.",
+                parent=self
+            )
+
+            return
+
+        service = MemberService()
+
+        member_data = service.get_by_id(person_id)
+
+        if member_data is None:
+
+            messagebox.showerror(
+                "Trainer nicht gefunden",
+                "Der Trainer wurde in der Datenbank nicht gefunden.",
+                parent=self
+            )
+
+            return
+
+        MemberWindow(
+            self,
+            on_saved=self.load_team_staff,
+            member_data=member_data
+        )    
 
     def create_trainer_tab(self):
 
@@ -649,8 +719,27 @@ class TeamWindow(ctk.CTkToplevel):
             side="left"
         )
 
-        ctk.CTkButton(
+        button_frame = ctk.CTkFrame(
             header,
+            fg_color="transparent"
+        )
+
+        button_frame.pack(
+            side="right"
+        )
+
+        ctk.CTkButton(
+            button_frame,
+            text="➖ Trainer entfernen",
+            width=160,
+            command=self.remove_trainer
+        ).pack(
+            side="right",
+            padx=(5, 0)
+        )
+
+        ctk.CTkButton(
+            button_frame,
             text="➕ Trainer hinzufügen",
             width=160,
             command=self.add_trainer
@@ -668,8 +757,9 @@ class TeamWindow(ctk.CTkToplevel):
             padx=20,
             pady=(0, 20)
         )
+
         self.trainer_table.double_click_callback = (
-            self.open_player
+            self.open_trainer
         )
 
         self.trainer_table.create_header(
@@ -679,8 +769,8 @@ class TeamWindow(ctk.CTkToplevel):
                 "Funktion"
             ]
         )
-        self.load_team_staff()
 
+        self.load_team_staff()
     def load_team_staff(self):
 
         self.trainer_table.clear()
@@ -698,41 +788,35 @@ class TeamWindow(ctk.CTkToplevel):
 
         service = TeamMemberService()
 
-        df = service.get_team_staff(
-            self.excel_datei,
+        staff = service.get_team_staff_db(
             self.team_data["TEAM_ID"]
         )
 
-        for _, row in df.iterrows():
+        for trainer in staff:
 
             self.trainer_table.create_row(
                 [
-                    row["VORNAME"],
-                    row["NACHNAME"],
-                    row["ROLLE"]
+                    trainer["VORNAME"],
+                    trainer["NACHNAME"],
+                    trainer["ROLLE"]
                 ],
-                row_data=row.to_dict()
-            )    
-
+                row_data=dict(trainer)
+            )
     def add_trainer(self):
 
         service = TeamMemberService()
 
-        df = service.get_all_staff(
-            self.excel_datei
-        )
+        staff = service.get_all_staff_db()
 
         values = [
             {
-                "MEMBER_ID": row["MEMBER_ID"],
-                "ROLE_CODE": row["ROLE_CODE"],
+                "MEMBER_ID": trainer["MEMBER_ID"],
                 "TEXT": (
-                    f"{row['VORNAME']} "
-                    f"{row['NACHNAME']} "
-                    f"({row['ROLE_CODE']})"
-                )
+                    f"{trainer['VORNAME']} "
+                    f"{trainer['NACHNAME']}"
+                ).strip()
             }
-            for _, row in df.iterrows()
+            for trainer in staff
         ]
 
         dialog = SelectionDialog(
@@ -753,11 +837,9 @@ class TeamWindow(ctk.CTkToplevel):
                 )
                 return
 
-            success = service.assign_staff(
-                self.excel_datei,
+            success = service.assign_staff_db(
                 self.team_data["TEAM_ID"],
-                result["MEMBER_ID"],
-                result["ROLE_CODE"]
+                result["MEMBER_ID"]
             )
 
             if success:
@@ -772,4 +854,43 @@ class TeamWindow(ctk.CTkToplevel):
                     "Bereits zugeordnet",
                     f"{result['TEXT']} ist bereits mit dieser Funktion eingetragen.",
                     parent=self
-                )           
+                )      
+
+    def remove_trainer(self):
+
+        selected = self.trainer_table.selected_data
+
+        if selected is None:
+
+            messagebox.showwarning(
+                "Kein Trainer",
+                "Bitte zuerst einen Trainer auswählen.",
+                parent=self
+            )
+
+            return
+
+        if not messagebox.askyesno(
+            "Trainer entfernen",
+            f"Soll '{selected['VORNAME']} "
+            f"{selected['NACHNAME']}' aus der Mannschaft "
+            "entfernt werden?",
+            parent=self
+        ):
+            return
+
+        service = TeamMemberService()
+
+        success = service.remove_staff_db(
+            selected["TEAM_MEMBER_ID"]
+        )
+
+        if success:
+
+            self.load_team_staff()
+
+            messagebox.showinfo(
+                "Trainer entfernt",
+                "Der Trainer wurde aus der Mannschaft entfernt.",
+                parent=self
+            )                 

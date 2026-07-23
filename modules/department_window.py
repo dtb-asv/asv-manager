@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import pandas as pd
 
 from modules.widgets.list_window_base import ListWindowBase
 from modules.department_service import DepartmentService
@@ -9,7 +10,7 @@ from tkinter import messagebox
 
 class DepartmentWindow(ListWindowBase):
 
-    def __init__(self, parent, excel_datei):
+    def __init__(self, parent):
 
         self.service = DepartmentService()
 
@@ -41,19 +42,17 @@ class DepartmentWindow(ListWindowBase):
             self.refresh
         )
 
-        self.excel_datei = excel_datei
-
         self.load_data()
 
     def load_data(self, suchtext=""):
 
-        df = self.service.load_departments(
-            self.excel_datei
+        df = pd.DataFrame(
+            self.service.get_active()
         )
 
-        if suchtext:
+        if suchtext and not df.empty:
             df = df[
-                df["NAME"].str.contains(
+                df["name"].str.contains(
                     suchtext,
                     case=False,
                     na=False
@@ -63,7 +62,7 @@ class DepartmentWindow(ListWindowBase):
         self.clear_scroll()
 
         columns = [
-            "DEPARTMENT_ID",
+            "ID",
             "NAME",
             "AKTIV"
         ]
@@ -76,9 +75,9 @@ class DepartmentWindow(ListWindowBase):
 
             self.create_row(
                 [
-                    row.get("DEPARTMENT_ID", ""),
-                    row.get("NAME", ""),
-                    row.get("AKTIV", "")
+                    row.get("department_id", ""),
+                    row.get("name", ""),
+                    "Ja" if row.get("active") else "Nein"
                 ],
                 row_data=row_data
             )
@@ -103,11 +102,10 @@ class DepartmentWindow(ListWindowBase):
             return
 
         if daten:
-            neue_daten["DEPARTMENT_ID"] = daten["DEPARTMENT_ID"]
-            neue_daten["AKTIV"] = daten.get("AKTIV", "Ja")
+            neue_daten["department_id"] = daten["department_id"]
+            neue_daten["active"] = daten.get("active", True)
 
         self.service.save_department(
-            self.excel_datei,
             neue_daten
         )
 
@@ -149,14 +147,13 @@ class DepartmentWindow(ListWindowBase):
 
         if not messagebox.askyesno(
             "Archivieren",
-            f"Soll der Bereich '{selected['NAME']}' archiviert werden?",
+            f"Soll der Bereich '{selected["name"]}' archiviert werden?",
             parent=self
         ):
             return
 
         self.service.archive_department(
-            self.excel_datei,
-            selected["DEPARTMENT_ID"]
+            selected["department_id"]
         )
 
         self.refresh()

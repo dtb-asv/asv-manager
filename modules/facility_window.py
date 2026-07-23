@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import pandas as pd
 
 from modules.widgets.list_window_base import ListWindowBase
 from modules.facility_service import FacilityService
@@ -9,9 +10,7 @@ from tkinter import messagebox
 
 class FacilityWindow(ListWindowBase):
 
-    def __init__(self, parent, excel_datei):
-
-        self.excel_datei = excel_datei
+    def __init__(self, parent):
 
         self.service = FacilityService()
 
@@ -47,13 +46,14 @@ class FacilityWindow(ListWindowBase):
 
     def load_data(self, suchtext=""):
 
-        df = self.service.load_facilities(
-            self.excel_datei
+        df = pd.DataFrame(
+            self.service.get_active()
         )
 
-        if suchtext:
+        if suchtext and not df.empty:
+
             df = df[
-                df["NAME"].str.contains(
+                df["name"].str.contains(
                     suchtext,
                     case=False,
                     na=False
@@ -63,8 +63,9 @@ class FacilityWindow(ListWindowBase):
         self.clear_scroll()
 
         columns = [
-            "FACILITY_ID",
+            "ID",
             "NAME",
+            "ADRESSE",
             "AKTIV"
         ]
 
@@ -76,9 +77,10 @@ class FacilityWindow(ListWindowBase):
 
             self.create_row(
                 [
-                    row.get("FACILITY_ID", ""),
-                    row.get("NAME", ""),
-                    row.get("AKTIV", "")
+                    row.get("facility_id", ""),
+                    row.get("name", ""),
+                    row.get("address", ""),
+                    "Ja" if row.get("active") else "Nein"
                 ],
                 row_data=row_data
             )
@@ -86,7 +88,6 @@ class FacilityWindow(ListWindowBase):
         self.set_status(
             f"{len(df)} Sportanlagen gefunden"
         )
-
     def neue_sportanlage(self):
 
         self.edit_facility()
@@ -103,11 +104,10 @@ class FacilityWindow(ListWindowBase):
             return
 
         if daten:
-            neue_daten["FACILITY_ID"] = daten["FACILITY_ID"]
-            neue_daten["AKTIV"] = daten.get("AKTIV", "Ja")
+            neue_daten["facility_id"] = daten["facility_id"]
+            neue_daten["active"] = daten.get("active", True)
 
         self.service.save_facility(
-            self.excel_datei,
             neue_daten
         )
 
@@ -115,13 +115,15 @@ class FacilityWindow(ListWindowBase):
 
         messagebox.showinfo(
             "Gespeichert",
-            f"Sportanlage '{neue_daten['NAME']}' wurde gespeichert.",
+            f"Sportanlage '{neue_daten['name']}' wurde gespeichert.",
             parent=self
         )
 
     def bearbeiten_sportanlage(self):
 
-        if not hasattr(self, "selected_data") or self.selected_data is None:
+        selected = self.get_selected_data()
+
+        if selected is None:
             messagebox.showwarning(
                 "Kein Bereich",
                 "Bitte zuerst eine Sportanlage auswählen.",
@@ -129,11 +131,13 @@ class FacilityWindow(ListWindowBase):
             )
             return
 
-        self.edit_facility(self.selected_data)  
+        self.edit_facility(selected)
 
     def archivieren_sportanlage(self):
 
-        if not hasattr(self, "selected_data") or self.selected_data is None:
+        selected = self.get_selected_data()
+
+        if selected is None:
 
             messagebox.showwarning(
                 "Keine Sportanlage",
@@ -144,14 +148,13 @@ class FacilityWindow(ListWindowBase):
 
         if not messagebox.askyesno(
             "Archivieren",
-            f"Soll die Sportanlage '{self.selected_data['NAME']}' archiviert werden?",
+            f"Soll die Sportanlage '{selected["name"]}' archiviert werden?",
             parent=self
         ):
             return
 
         self.service.archive_facility(
-            self.excel_datei,
-            self.selected_data["FACILITY_ID"]
+            selected["facility_id"]
         )
 
         self.refresh()

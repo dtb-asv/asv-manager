@@ -1,104 +1,67 @@
-import pandas as pd
-
-from modules.constants import (
-    SHEET_PLACES,
-    PREFIX_PLACE
-)
-from modules.facility_service import FacilityService
-from modules.place_writer import PlaceWriter
+from modules.repositories.place_repository import PlaceRepository
 
 
 class PlaceService:
 
     def __init__(self):
 
-        self.writer = PlaceWriter()
+        self.repository = PlaceRepository()
 
-    def load_places(self, excel_datei):
+    def get_all(self):
 
-        df = pd.read_excel(
-            excel_datei,
-            sheet_name=SHEET_PLACES
-        )
+        return self.repository.get_all()
 
-        if df.empty:
-            return df
+    def get_active(self):
 
-        if "AKTIV" in df.columns:
-            df = df[df["AKTIV"] == "Ja"]
+        return self.repository.get_active()
 
-        return df.sort_values("NAME")
+    def get_by_id(self, place_id):
 
-    def next_place_id(self, excel_datei):
+        return self.repository.get_by_id(place_id)
 
-        df = self.load_places(excel_datei)
+    def save_place(self, daten):
 
-        if df.empty:
-            return f"{PREFIX_PLACE}000001"
+        place = {
 
-        nummern = []
+            "place_id": daten.get(
+                "place_id",
+                daten.get("PLACE_ID")
+            ),
 
-        for place_id in df["PLACE_ID"]:
+            "facility_id": daten.get(
+                "facility_id",
+                daten.get("FACILITY_ID")
+            ),
 
-            try:
-                nummern.append(
-                    int(
-                        str(place_id).replace(
-                            PREFIX_PLACE,
-                            ""
-                        )
-                    )
-                )
-            except Exception:
-                pass
+            "name": daten.get(
+                "name",
+                daten.get("NAME", "")
+            ),
 
-        return f"{PREFIX_PLACE}{max(nummern)+1:06d}"
+            "address": daten.get(
+                "address",
+                daten.get("ADDRESS", "")
+            ),
 
-    def save_place(self, excel_datei, daten):
+            "training_zones": daten.get(
+                "training_zones",
+                daten.get("TRAINING_ZONES", "")
+            ),
 
-        if not daten.get("PLACE_ID"):
+            "active": daten.get(
+                "active",
+                daten.get("AKTIV", True)
+            )
+        }
 
-            daten["PLACE_ID"] = self.next_place_id(
-                excel_datei
+        if isinstance(place["active"], str):
+
+            place["active"] = (
+                place["active"].strip().lower()
+                in ("ja", "true", "1", "aktiv")
             )
 
-            daten["AKTIV"] = "Ja"
+        return self.repository.save(place)
+    def archive_place(self, place_id):
 
-            return self.writer.add_place(
-                excel_datei,
-                daten
-            )
-
-        self.writer.update_place(
-            excel_datei,
-            daten["PLACE_ID"],
-            daten
-        )
-
-        return daten["PLACE_ID"]
-
-    def archive_place(
-        self,
-        excel_datei,
-        place_id
-    ):
-
-        self.writer.archive_place(
-            excel_datei,
-            place_id
-        )
-
-    def load_places_with_facility_name(self, excel_datei):
-
-        places = self.load_places(excel_datei)
-        facilities = FacilityService().load_facilities(excel_datei)
-
-        if places.empty:
-            return places
-
-        return places.merge(
-            facilities[["FACILITY_ID", "NAME"]],
-            on="FACILITY_ID",
-            how="left",
-            suffixes=("", "_FACILITY")
-        )    
+        self.repository.archive(place_id)

@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import pandas as pd
 
 from modules.widgets.list_window_base import ListWindowBase
 from modules.place_service import PlaceService
@@ -9,9 +10,7 @@ from tkinter import messagebox
 
 class PlaceWindow(ListWindowBase):
 
-    def __init__(self, parent, excel_datei):
-
-        self.excel_datei = excel_datei
+    def __init__(self, parent):
 
         self.service = PlaceService()
 
@@ -48,13 +47,13 @@ class PlaceWindow(ListWindowBase):
         
     def load_data(self, suchtext=""):
 
-        df = self.service.load_places_with_facility_name(
-            self.excel_datei
+        df = pd.DataFrame(
+            self.service.get_active()
         )
 
-        if suchtext:
+        if suchtext and not df.empty:
             df = df[
-                df["NAME"].str.contains(
+                df["name"].str.contains(
                     suchtext,
                     case=False,
                     na=False
@@ -64,9 +63,9 @@ class PlaceWindow(ListWindowBase):
         self.clear_scroll()
 
         columns = [
-            "PLACE_ID",
+            "ID",
             "NAME",
-            "NAME_FACILITY",
+            "SPORTANLAGE",
             "TRAININGSZONEN",
             "AKTIV"
         ]
@@ -79,15 +78,15 @@ class PlaceWindow(ListWindowBase):
 
             self.create_row(
                 [
-                    row.get("PLACE_ID", ""),
-                    row.get("NAME", ""),
-                    row.get("NAME_FACILITY", ""),
-                    row.get("TRAININGSZONEN", ""),
-                    row.get("AKTIV", "")
+                    row.get("place_id", ""),
+                    row.get("name", ""),
+                    row.get("facility_name", ""),
+                    row.get("training_zones", ""),
+                    "Ja" if row.get("active") else "Nein"
                 ],
                 row_data=row_data
             )
-             
+
         self.set_status(
             f"{len(df)} Plätze gefunden"
         )
@@ -100,7 +99,6 @@ class PlaceWindow(ListWindowBase):
 
         neue_daten = PlaceDialog(
             self,
-            self.excel_datei,
             title="Platz",
             daten=daten
         ).show()
@@ -109,11 +107,10 @@ class PlaceWindow(ListWindowBase):
             return
 
         if daten:
-            neue_daten["PLACE_ID"] = daten["PLACE_ID"]
-            neue_daten["AKTIV"] = daten.get("AKTIV", "Ja")
+            neue_daten["place_id"] = daten["place_id"]
+            neue_daten["active"] = daten.get("active", True)
 
         self.service.save_place(
-            self.excel_datei,
             neue_daten
         )
 
@@ -121,7 +118,7 @@ class PlaceWindow(ListWindowBase):
 
         messagebox.showinfo(
             "Gespeichert",
-            f"Platz '{neue_daten['NAME']}' wurde gespeichert.",
+            f"Platz '{neue_daten.get('name', neue_daten.get('NAME', ''))}' wurde gespeichert.",
             parent=self
         )
 
@@ -153,14 +150,13 @@ class PlaceWindow(ListWindowBase):
 
         if not messagebox.askyesno(
             "Archivieren",
-            f"Soll der Platz '{selected['NAME']}' archiviert werden?",
+            f"Soll der Platz '{selected['name']}' archiviert werden?",
             parent=self
         ):
             return
 
         self.service.archive_place(
-            self.excel_datei,
-            selected["PLACE_ID"]
+            selected["place_id"]
         )
 
         self.refresh()

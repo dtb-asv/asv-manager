@@ -1,23 +1,26 @@
 import customtkinter as ctk
+import pandas as pd
 from modules.facility_service import FacilityService
 
 
 class PlaceDialog(ctk.CTkToplevel):
 
-    def __init__(self, parent, excel_datei, title, daten=None):
+    def __init__(self, parent, title, daten=None):
 
         super().__init__(parent)
 
         self.service = FacilityService()
 
-        df = self.service.load_facilities(excel_datei)
+        df = pd.DataFrame(
+            self.service.get_active()
+        )
 
-        facility_names = df["NAME"].tolist()
+        facility_names = df["name"].tolist()
 
         self.facility_map = dict(
             zip(
-                df["NAME"],
-                df["FACILITY_ID"]
+                df["name"],
+                df["facility_id"]
             )
         )
 
@@ -27,7 +30,7 @@ class PlaceDialog(ctk.CTkToplevel):
         self.result = None
 
         self.title(title)
-        self.geometry("420x310")
+        self.geometry("420x390")
         self.resizable(False, False)
         self.grab_set()
 
@@ -70,6 +73,26 @@ class PlaceDialog(ctk.CTkToplevel):
             fill="x"
         )
 
+        ctk.CTkLabel(
+            self,
+            text="Adresse",
+            font=("Segoe UI", 13, "bold")
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(15, 5)
+        )
+
+        self.address_entry = ctk.CTkEntry(
+            self,
+            width=360
+        )
+
+        self.address_entry.pack(
+            padx=20,
+            fill="x"
+        )
+
         if facility_names:
             self.facility_combo.set(facility_names[0])
 
@@ -103,12 +126,23 @@ class PlaceDialog(ctk.CTkToplevel):
 
             self.name_entry.insert(
                 0,
-                daten.get("NAME", "")
+                daten.get(
+                    "name",
+                    daten.get("NAME", "")
+                )
+            )
+
+            self.address_entry.insert(
+                0,
+                daten.get(
+                    "address",
+                    daten.get("ADDRESS", "")
+                )
             )
 
             training_zones = daten.get(
-                "TRAININGSZONEN",
-                1
+                "training_zones",
+                daten.get("TRAININGSZONEN", 1)
             )
 
             if str(training_zones).lower() == "nan":
@@ -119,8 +153,8 @@ class PlaceDialog(ctk.CTkToplevel):
             )
 
             facility_id = daten.get(
-                "FACILITY_ID",
-                ""
+                "facility_id",
+                daten.get("FACILITY_ID", "")
             )
 
             for facility_name, mapped_id in self.facility_map.items():
@@ -167,12 +201,13 @@ class PlaceDialog(ctk.CTkToplevel):
         facility_name = self.facility_combo.get()
 
         self.result = {
-            "NAME": name,
-            "FACILITY_ID": self.facility_map.get(
+            "name": name,
+            "facility_id": self.facility_map.get(
                 facility_name,
                 ""
             ),
-            "TRAININGSZONEN": int(
+            "address": self.address_entry.get().strip(),
+            "training_zones": int(
                 self.training_zones_combo.get()
             )
         }
