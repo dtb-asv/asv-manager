@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+Personen – ASV Manager
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>👥 Personen</h1>
+        <p>Verwaltung aller Personen im ASV Manager</p>
+    </div>
+
+    <a class="button" href="/persons/new">
+        + Neue Person
+    </a>
+</div>
+
+<div class="card">
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Geburtsdatum</th>
+            <th>Mobil</th>
+            <th>E-Mail</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for person in persons %}
+        <tr>
+            <td><a href="/persons/{{ person.person_id }}">{{ person.last_name }}, {{ person.first_name }}</a></td>
+            <td>{{ person.birth_date or '' }}</td>
+            <td>{{ person.mobile or '' }}</td>
+            <td>{{ person.email or '' }}</td>
+            <td>{% if person.active %}Aktiv{% else %}Inaktiv{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+</div>
+
+{% endblock %}

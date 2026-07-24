@@ -11,3 +11,21 @@ class SeasonService:
 
     def get_active(self):
         return self.repository.get_active()
+
+    def create_season(self, name, active=True):
+        return self.repository.save(
+            name=name,
+            active=active
+        )
+
+    def get_season(self, season_id):
+        return self.repository.get_by_id(season_id)
+
+
+
+    def update_season(self, season_id, name, active=True):
+        self.repository.update(
+            season_id=season_id,
+            name=name,
+            active=active
+        )

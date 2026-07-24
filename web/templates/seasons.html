@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+Saisonen – ASV Manager
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>📅 Saisonen</h1>
+        <p>Alle im ASV Manager vorhandenen Saisonen</p>
+    </div>
+
+    <a class="button" href="/seasons/new">
+        + Neue Saison
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Saison</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for season in seasons %}
+                <tr>
+                    <td>
+                        <strong><a href="/seasons/{{ season.season_id }}">{{ season.name }}</a></strong>
+                    </td>
+
+                    <td>
+                        {% if season.active %}
+                            <span class="status-active">Aktiv</span>
+                        {% else %}
+                            <span class="status-inactive">Inaktiv</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="empty-message">
+                        Keine Saisonen gefunden.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

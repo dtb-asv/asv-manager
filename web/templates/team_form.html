@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if team %}Mannschaft bearbeiten{% else %}Neue Mannschaft{% endif %} – ASV Manager
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>
+            {% if team %}
+                Mannschaft bearbeiten
+            {% else %}
+                Neue Mannschaft
+            {% endif %}
+        </h1>
+
+        <p>
+            {% if team %}
+                Stammdaten der Mannschaft ändern
+            {% else %}
+                Eine neue Mannschaft für den ASV Neufeld anlegen
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="card">
+
+    <form
+        method="post"
+        action="{% if team %}/teams/{{ team.team_id }}{% else %}/teams/new{% endif %}"
+    >
+
+        <div class="form-group">
+            <label for="name">Mannschaftsname</label>
+            <input
+                id="name"
+                name="name"
+                class="form-control"
+                type="text"
+                placeholder="Zum Beispiel U10, U16 oder KM"
+                value="{{ team.name if team else '' }}"
+                required
+                autofocus
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="season_id">Saison</label>
+
+            <select
+                id="season_id"
+                name="season_id"
+                class="form-control"
+                required
+            >
+                <option value="">-- Saison auswählen --</option>
+
+                {% for season in seasons %}
+                <option
+                    value="{{ season.season_id }}"
+                    {% if team and team.season_id == season.season_id %}selected{% endif %}
+                >
+                    {{ season.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if team %}
+        <div class="form-group">
+            <label class="checkbox-label" for="active">
+                <input
+                    id="active"
+                    name="active"
+                    type="checkbox"
+                    value="true"
+                    {% if team.active %}checked{% endif %}
+                >
+                Mannschaft ist aktiv
+            </label>
+        </div>
+        {% endif %}
+
+        <div class="form-actions">
+            <button class="button" type="submit">
+                {% if team %}
+                    Änderungen speichern
+                {% else %}
+                    Mannschaft speichern
+                {% endif %}
+            </button>
+
+            <a class="button button-secondary" href="/teams">
+                Abbrechen
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

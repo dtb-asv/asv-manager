@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}ASV Manager{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/css/style.css') }}"
+    >
+
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+
+<header class="header">
+    <div class="brand">
+        <img
+            src="{{ url_for('static', path='/images/asv_logo.png') }}"
+            alt="Logo ASV Neufeld"
+            class="brand-logo"
+        >
+
+        <div class="brand-text">
+            <div class="header-title">ASV Manager</div>
+            <div class="header-subtitle">
+                Vereinsverwaltung ASV Neufeld
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <h3>Menü</h3>
+
+        <a
+            href="/"
+            class="{% if active_page == 'dashboard' %}active{% endif %}"
+        >
+            🏠 Dashboard
+        </a>
+
+        <a
+            href="/teams"
+            class="{% if active_page == 'teams' %}active{% endif %}"
+        >
+            ⚽ Mannschaften
+        </a>
+        <a
+            href="/seasons"
+            class="{% if active_page == 'seasons' %}active{% endif %}"
+        >
+            🗓️ Saisonen
+        </a>
+
+
+        <a
+            href="/persons"
+            class="{% if active_page == 'persons' %}active{% endif %}"
+        >
+            👥 Personen
+        </a>
+
+
+        <a
+            href="/facilities"
+            class="{% if active_page == 'facilities' %}active{% endif %}"
+        >
+            🏟 Sportanlagen
+        </a>
+
+        <a
+            href="/places"
+            class="{% if active_page == 'places' %}active{% endif %}"
+        >
+            📍 Plätze
+        </a>
+
+        <a
+            href="/games"
+            class="{% if active_page == 'games' %}active{% endif %}"
+        >
+            📅 Spiele und Termine
+        </a>
+    </aside>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}
+Mannschaften – ASV Manager
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>⚽ Mannschaften</h1>
+        <p>Alle Mannschaften des ASV Neufeld</p>
+    </div>
+
+    <a class="button" href="/teams/new">
+        + Neue Mannschaft
+    </a>
+</div>
+
+<div class="card">
+
+    <input
+        id="teamSearch"
+        class="search-input"
+        type="search"
+        placeholder="Mannschaft suchen, zum Beispiel U10 oder KM …"
+        oninput="filterTeams()"
+    >
+
+    <div class="table-wrapper">
+        <table id="teamTable">
+            <thead>
+                <tr>
+                    <th>Mannschaft</th>
+                    <th>Saison-ID</th>
+                    <th>Status</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for team in teams %}
+                <tr>
+                    <td>
+                        <strong>{{ team.name }}</strong>
+                    </td>
+
+                    <td>
+                        {{ team.season_id }}
+                    </td>
+
+                    <td>
+                        {% if team.active %}
+                            <span class="status-active">Aktiv</span>
+                        {% else %}
+                            <span class="status-inactive">Inaktiv</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a class="button button-secondary" href="/teams/{{ team.team_id }}">
+                            Details
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="empty-message">
+                        Keine Mannschaften gefunden.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filterTeams() {
+        const input = document
+            .getElementById("teamSearch")
+            .value
+            .toLowerCase()
+            .trim();
+
+        const rows = document.querySelectorAll(
+            "#teamTable tbody tr"
+        );
+
+        rows.forEach(function (row) {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? "" : "none";
+        });
+    }
+</script>
+{% endblock %}

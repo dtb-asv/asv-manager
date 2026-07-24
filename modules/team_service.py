@@ -162,6 +162,10 @@ class TeamService:
     def get_active(self):
         return self.repository.get_active()    
 
+    def get_team(self, team_id):
+        return self.repository.get_by_id(team_id)
+
+
     def get_all(self):
         return self.repository.get_all()
 

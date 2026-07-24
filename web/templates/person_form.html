@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Person – ASV Manager{% endblock %}
+
+{% block content %}
+<div class="page-header">
+<div>
+<h1>{% if person %}Person bearbeiten{% else %}Neue Person{% endif %}</h1>
+</div>
+</div>
+
+<div class="card">
+<form method="post">
+<div class="form-group">
+<label>Vorname</label>
+<input class="form-control" type="text" name="first_name" value="{{ person.first_name if person else '' }}">
+</div>
+
+<div class="form-group">
+<label>Nachname</label>
+<input class="form-control" type="text" name="last_name" value="{{ person.last_name if person else '' }}">
+</div>
+
+<div class="form-group">
+<label>Geburtsdatum</label>
+<input class="form-control" type="date" name="birth_date" value="{{ person.birth_date if person else '' }}">
+</div>
+
+<div class="form-group">
+<label>Mobil</label>
+<input class="form-control" type="text" name="mobile" value="{{ person.mobile if person else '' }}">
+</div>
+
+<div class="form-group">
+<label>E-Mail</label>
+<input class="form-control" type="email" name="email" value="{{ person.email if person else '' }}">
+</div>
+
+<div class="form-group">
+<label>Status</label>
+<input class="form-control" type="text" name="status" value="{{ person.status if person else '' }}">
+</div>
+
+<div class="form-group">
+<label><input type="checkbox" name="active" value="true" {% if not person or person.active %}checked{% endif %}> Aktiv</label>
+</div>
+
+<div class="form-actions">
+<button class="button" type="submit">Speichern</button>
+<a class="button button-secondary" href="/persons">Abbrechen</a>
+</div>
+</form>
+</div>
+{% endblock %}

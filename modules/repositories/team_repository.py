@@ -29,6 +29,30 @@ class TeamRepository:
 
             return cur.fetchall()
 
+    def get_by_id(self, team_id):
+        """
+        Liefert genau eine Mannschaft anhand ihrer TEAM_ID.
+        """
+
+        conn = self.db.connect()
+
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT
+                    team_id,
+                    name,
+                    season_id,
+                    active
+                FROM teams
+                WHERE team_id = %s
+                """,
+                (team_id,)
+            )
+
+            return cur.fetchone()
+
+
     def get_active(self):
         """
         Liefert nur aktive Mannschaften.
