@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -12,14 +14,19 @@ from modules.season_service import SeasonService
 from modules.person_service import PersonService
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
 app = FastAPI(title="ASV Manager")
+
 app.mount(
     "/static",
-    StaticFiles(directory="web/static"),
+    StaticFiles(directory=BASE_DIR / "static"),
     name="static"
 )
 
-templates = Jinja2Templates(directory="web/templates")
+templates = Jinja2Templates(
+    directory=BASE_DIR / "templates"
+)
 
 facility_service = FacilityService()
 place_service = PlaceService()
